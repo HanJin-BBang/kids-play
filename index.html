@@ -183,6 +183,18 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 @keyframes bob{0%,100%{transform:translateY(8px) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 @keyframes flick{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
 @keyframes spurt{from{transform:scaleY(.75)}to{transform:scaleY(1.15)}}
+/* 칠하는 순간: 그 부분만 한 번 움직임 (몸통 등은 그림 전체가 깡총) */
+.pic g.jiggle{animation:hop .45s ease-out}
+.pic g.fish-tail.jiggle{animation:wag .18s ease-in-out 4 alternate;transform-origin:112px 200px}
+.pic g.wingL.jiggle,.pic g.wingR.jiggle{animation:flap .18s ease-in-out 4 alternate;transform-origin:200px 210px}
+.pic g.wheel.jiggle{animation:spin .6s ease-out}
+.pic g.cat-tail.jiggle{animation:wag .2s ease-in-out 4 alternate;transform-origin:262px 312px}
+.pic g.cat-head.jiggle{animation:tilt .8s ease-in-out;transform-origin:200px 240px}
+.pic g.dino-tail.jiggle{animation:wag .2s ease-in-out 4 alternate;transform-origin:118px 255px}
+.pic g.dino-neck.jiggle{animation:nod .3s ease-in-out 2 alternate;transform-origin:235px 245px}
+.pic g.whale-tail.jiggle{animation:flick .2s ease-in-out 4 alternate;transform-origin:318px 238px}
+.pic g.spout.jiggle{animation:spurt .25s ease-in-out 4 alternate;transform-origin:150px 128px}
+.pic g.head.jiggle{animation:bloom .3s ease-in-out 2 alternate;transform-origin:200px 150px}
 
 /* 세로 화면: 그림판 위, 팔레트·도구 아래 */
 @media (orientation:portrait){
@@ -203,15 +215,20 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
   .alive *{animation-duration:3s!important}
   .pic .pop,.done{animation:none}
 }
-.install{display:flex;gap:18px;align-items:center;margin-top:18px;padding-top:18px;border-top:3px dashed var(--bg)}
-.qr{flex:none;width:132px;height:132px;background:#fff;border-radius:16px;padding:8px;box-shadow:0 0 0 3px var(--bg)}
-.qr svg{width:100%;height:100%;display:block}
-.install-text{min-width:0}
-.install h3{margin:0 0 6px;font-weight:400;font-size:22px}
-.install p{margin:0 0 6px;color:var(--muted);font-size:15px;line-height:1.45}
-.install .url{font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);word-break:break-all;user-select:text;-webkit-user-select:text}
-.lv-install{margin-top:6px;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:17px}
-@media (max-width:520px){.install{flex-direction:column;align-items:flex-start}}
+.topbar>.dots,.topbar>.brush{margin-left:auto}
+.qr-btn{flex:none;display:flex;align-items:center;gap:6px;background:#fff;border-radius:16px;padding:5px 10px 5px 5px;box-shadow:0 4px 0 var(--tool-shadow);font-size:16px}
+.qr-mini{width:40px;height:40px;display:block}
+.qr-mini svg,.qr-big svg{width:100%;height:100%;display:block}
+.share-card{width:min(640px,100%)}
+.share-body{display:flex;gap:22px;align-items:center}
+.qr-big{flex:none;width:min(260px,62vw);aspect-ratio:1;background:#fff;padding:12px;border-radius:20px;box-shadow:0 0 0 4px var(--bg)}
+.steps{margin:0;padding-left:22px;display:grid;gap:10px;font-size:19px;line-height:1.4}
+.steps b{font-weight:400;color:var(--accent)}
+.url{margin:16px 0 0;font-family:ui-monospace,monospace;font-size:14px;word-break:break-all;color:var(--muted);user-select:text;-webkit-user-select:text}
+.share-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.pill{background:var(--bg);border-radius:999px;padding:12px 22px;font-size:18px}
+.pill.dark{background:var(--ink);color:#fff}
+@media (max-width:600px){.share-body{flex-direction:column;align-items:flex-start}.qr-btn span:last-child{display:none}.qr-btn{padding:4px}.qr-mini{width:34px;height:34px}}
 </style>
 
 </head>
@@ -230,6 +247,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
         <button class="bsz rainbow" type="button" id="rainbow" aria-label="무지개 붓"><i></i></button>
         <button class="bsz" type="button" id="guideBtn" aria-label="따라 그리기" hidden><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg></button>
       </div>
+      <button class="qr-btn" id="qrBtn" type="button" aria-label="다른 기기로 옮기기 QR"><span class="qr-mini" id="qrMini"></span><span>QR</span></button>
     </div>
     <div class="board" id="board">
       <svg id="guide" viewBox="0 0 400 400" hidden></svg>
@@ -259,14 +277,23 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
     <div class="picker-head"><h2>나이 단계</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
     <div class="levels" id="levels"></div>
     <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요.</p>
-    <div class="install">
-      <div class="qr" id="qr" aria-label="설치 QR 코드"></div>
-      <div class="install-text">
-        <h3>다른 기기에 설치</h3>
-        <p>다른 태블릿·휴대폰 카메라로 QR을 찍고, Chrome 메뉴에서 <b>홈 화면에 추가</b>를 누르세요.</p>
-        <p class="url">https://hanjin-bbang.github.io/kids-play/</p>
-        <button class="lv-install" id="installBtn" type="button" hidden>이 기기에 앱으로 설치</button>
-      </div>
+  </div>
+</div>
+<div class="picker" id="share" hidden>
+  <div class="picker-card share-card" role="dialog" aria-label="다른 기기로 옮기기">
+    <div class="picker-head"><h2>다른 기기로 옮기기</h2><button class="close" id="shClose" type="button" aria-label="닫기">✕</button></div>
+    <div class="share-body">
+      <div class="qr-big" id="qrBig"></div>
+      <ol class="steps">
+        <li>옮길 태블릿·휴대폰의 <b>카메라</b>로 이 QR을 찍어요.</li>
+        <li>뜨는 주소를 눌러 <b>Chrome</b>으로 열어요.</li>
+        <li>Chrome 메뉴 ⋮ → <b>홈 화면에 추가 → 설치</b>를 눌러요.</li>
+      </ol>
+    </div>
+    <p class="url" id="shUrl">https://hanjin-bbang.github.io/kids-play/</p>
+    <div class="share-actions">
+      <button class="pill" id="copyBtn" type="button">주소 복사</button>
+      <button class="pill dark" id="installBtn" type="button" hidden>이 기기에 앱으로 설치</button>
     </div>
   </div>
 </div>
@@ -492,12 +519,22 @@ function newMission(prefix){
   speak(prefix+'반짝이는 곳을 '+COLORS[ci].name+'으로 칠해볼까?');
 }
 
+const PARTS=['fish-tail','wingL','wingR','wheel','cat-tail','cat-head','dino-tail','dino-neck','whale-tail','spout','head'].map(c=>'g.'+c).join(',');
+function jiggle(ids){
+  if(reduce)return;
+  const set=new Set();
+  ids.forEach(id=>{const el=svg.querySelector(`[data-id="${id}"]`);let g=el.parentElement.closest(PARTS);
+    if(!g||!svg.contains(g))g=svg.querySelector(':scope > g:not(.fx)');if(g)set.add(g)});
+  set.forEach(g=>{g.classList.remove('jiggle');void g.getBoundingClientRect();g.classList.add('jiggle');
+    g.onanimationend=e=>{if(e.target===g)g.classList.remove('jiggle')}});
+}
 function fillUnit(ids,next,x,y){
   const p=PICS[S.pic],f=fillsOf(p.id);
   stacks[p.id].push(ids.map(id=>({id,prev:f[id]||null})));
   ids.forEach(id=>{if(next)f[id]=next;else delete f[id];
     const el=svg.querySelector(`[data-id="${id}"]`);el.style.fill=next||'';el.classList.remove('pop');void el.getBoundingClientRect();el.classList.add('pop')});
   burst(x,y,next||'#C9D3DE',S.level===0?24:14);
+  if(next)jiggle(ids);
   tone(S.eraser?300:500+(S.color%10)*35);
   save();
   const hitMission=mission&&ids.includes(mission.id);
@@ -663,10 +700,19 @@ buildPalette();render();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 (function(){
-  /* 설치 QR: 인터넷이 없으면 주소 글자만 보여요 */
-  try{const q=qrcode(0,'M');q.addData("https://hanjin-bbang.github.io/kids-play/");q.make();
-    document.getElementById('qr').innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true});}catch(e){document.getElementById('qr').hidden=true}
-  /* 이 기기에 설치 버튼 (Chrome이 설치를 허용할 때만 보임) */
+  const URL="https://hanjin-bbang.github.io/kids-play/";
+  let svgTag='';
+  try{const q=qrcode(0,'M');q.addData(URL);q.make();svgTag=q.createSvgTag({cellSize:4,margin:0,scalable:true})}catch(e){}
+  const mini=document.getElementById('qrMini'),big=document.getElementById('qrBig'),share=document.getElementById('share');
+  if(svgTag){mini.innerHTML=svgTag;big.innerHTML=svgTag}else{mini.hidden=true;big.hidden=true}
+  document.getElementById('qrBtn').addEventListener('click',()=>{share.hidden=false;try{tone(480)}catch(e){}});
+  document.getElementById('shClose').addEventListener('click',()=>share.hidden=true);
+  share.addEventListener('click',e=>{if(e.target===share)share.hidden=true});
+  const copyBtn=document.getElementById('copyBtn');
+  copyBtn.addEventListener('click',()=>{
+    const done=()=>{copyBtn.textContent='복사했어요';setTimeout(()=>copyBtn.textContent='주소 복사',1500)};
+    try{navigator.clipboard.writeText(URL).then(done,()=>{getSelection().selectAllChildren(document.getElementById('shUrl'))})}catch(e){getSelection().selectAllChildren(document.getElementById('shUrl'))}
+  });
   let deferred=null;const btn=document.getElementById('installBtn');
   addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;btn.hidden=false});
   btn.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;btn.hidden=true});
