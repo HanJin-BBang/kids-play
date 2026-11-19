@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#DCEFF6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="색칠놀이">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>콕콕 색칠놀이</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<style>
+/* 화면 규칙(고정): 가로 = [색 팔레트 | 그림판 | 도구(오른손)] 3열, 세로 = 그림판 위 · 팔레트 · 도구 아래.
+   그림판은 남은 공간을 모두 차지하고, 팔레트·도구 크기는 화면 높이에 비례해 정해진다. 새 기능은 이 틀 안에만 추가한다. */
+:root{
+  --bg:#DCEFF6; --bg-dot:#C7E3EE; --board:#FFFFFF; --ink:#2B2D42; --muted:#5E6B80;
+  --tool-shadow:#B5D2DE; --accent:#FF7A59; --panel:rgba(255,255,255,.55);
+  --display:"Jua","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  --sw:clamp(46px,8.4vh,74px);  /* 색 동그라미 */
+  --tb:clamp(58px,11vh,88px);   /* 도구 버튼 */
+  --gap:14px;
+  color-scheme:light;
+}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  height:100%;overflow:hidden;margin:0;
+  background:var(--bg) radial-gradient(var(--bg-dot) 2px,transparent 2.5px) 0 0/28px 28px;
+  color:var(--ink);font-family:var(--display);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
+
+.app{
+  height:100%;padding-block:14px;display:grid;gap:var(--gap);
+  grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr);
+  grid-template-areas:"palette stage tools";
+}
+
+/* 팔레트 */
+.palette{
+  grid-area:palette;align-self:center;display:grid;gap:12px;padding:14px;
+  grid-template-columns:repeat(var(--cols,2),var(--sw));background:var(--panel);border-radius:30px;
+}
+.swatch{
+  width:var(--sw);height:var(--sw);border-radius:50%;border:4px solid #fff;
+  box-shadow:0 4px 0 rgba(43,45,66,.18);transition:transform .15s;
+}
+.swatch[aria-pressed="true"]{transform:scale(1.1);outline:5px solid var(--ink);outline-offset:3px}
+
+/* 그림판 */
+.stage{grid-area:stage;display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;min-width:0;min-height:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-inline:6px;min-height:44px}
+.topbar h1{margin:0;white-space:nowrap;font-size:clamp(24px,4.2vh,34px);font-weight:400;letter-spacing:.02em}
+.hint{font-size:16px;color:var(--muted);margin-left:10px}
+.dots{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}
+.dots span{width:16px;height:16px;border-radius:50%;border:3px solid var(--ink);background:#fff;transition:background .2s}
+/* 자유 그리기: 붓 굵기는 진행 동그라미 자리에 */
+.brush{display:flex;align-items:center;gap:10px;--cur:#F2545B}
+.bsz{width:50px;height:50px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 4px 0 var(--tool-shadow)}
+.bsz i{display:block;width:var(--d);height:var(--d);border-radius:50%;background:var(--cur)}
+.bsz[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:2px}
+.bsz.rainbow i{width:30px;height:30px;background:conic-gradient(#F2545B,#FF9F43,#FFD93D,#5BC27A,#6EC6F0,#3D7BE0,#9B6BE0,#FF8FC1,#F2545B)}
+.mission{display:inline-flex;align-items:center;gap:8px;margin-left:12px;background:#fff;border-radius:999px;padding:6px 14px 6px 8px;font-size:18px;box-shadow:0 3px 0 var(--tool-shadow);vertical-align:middle;white-space:nowrap}
+.mission i{width:26px;height:26px;border-radius:50%;border:3px solid #fff;outline:3px solid var(--ink)}
+.stars{color:#E8950C}
+.pic .r.target{stroke:var(--accent);stroke-dasharray:16 10;animation:march .9s linear infinite}
+@keyframes march{to{stroke-dashoffset:-52}}
+#guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#guide path,#guide circle{fill:none;stroke:#AFC3D1;stroke-width:12;stroke-dasharray:.1 24;stroke-linecap:round;stroke-linejoin:round}
+.bsz svg{width:28px;height:28px;fill:none;stroke:var(--ink);stroke-width:2.6;stroke-dasharray:1.5 4.5;stroke-linecap:round}
+.levels{display:grid;gap:12px}
+.lv{display:flex;justify-content:space-between;align-items:center;gap:14px;border:4px solid var(--bg);border-radius:22px;padding:16px 20px;text-align:left;font-size:24px}
+.lv small{display:block;font-size:15px;color:var(--muted);margin-top:4px;line-height:1.4}
+.lv[aria-pressed="true"]{border-color:var(--ink)}
+.lv b{font-weight:400;background:var(--ink);color:#fff;border-radius:999px;padding:4px 12px;font-size:15px}
+.parent-note{margin:14px 4px 0;color:var(--muted);font-size:15px}
+#picName{touch-action:none}
+#paper{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.topbar{min-height:54px}
+.board{
+  position:relative;background:var(--board);border-radius:32px;min-height:0;
+  box-shadow:0 6px 0 var(--tool-shadow);display:grid;place-items:center;padding:12px;overflow:hidden;
+}
+.board svg{width:100%;height:100%;display:block}
+
+/* 도구 (오른손 쪽) */
+.tools{grid-area:tools;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.tool{
+  position:relative;overflow:hidden;width:var(--tb);height:var(--tb);border-radius:24px;background:#fff;
+  box-shadow:0 5px 0 var(--tool-shadow);display:grid;place-items:center;align-content:center;gap:2px;
+  font-size:clamp(12px,1.8vh,15px);
+}
+.tool svg{width:44%;height:auto;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;position:relative}
+.tool span{position:relative;white-space:nowrap}
+.tool.on{background:var(--ink);color:#fff;box-shadow:0 5px 0 #11121c}
+.tool:active{transform:translateY(3px);box-shadow:0 2px 0 var(--tool-shadow)}
+.tool .hold{position:absolute;inset:0;background:#FFD6CB;transform:scaleY(0);transform-origin:bottom}
+.tool.holding .hold{transform:scaleY(1);transition:transform .9s linear}
+
+/* 완성 배너 */
+.done{
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:2;
+  display:flex;align-items:center;gap:14px;white-space:nowrap;
+  background:var(--ink);color:#fff;border-radius:999px;padding:10px 10px 10px 26px;font-size:clamp(20px,3.2vh,26px);
+  animation:rise .4s ease-out;
+}
+.done button{background:var(--accent);color:#fff;border-radius:999px;padding:12px 24px;font-size:inherit}
+@keyframes rise{from{transform:translate(-50%,40px);opacity:0}}
+
+/* 그림 고르기 */
+.picker{position:fixed;inset:0;z-index:20;background:rgba(43,45,66,.5);display:grid;place-items:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.picker-card{background:#fff;border-radius:34px;padding:22px;width:min(920px,100%);max-height:100%;overflow:auto}
+.picker-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.picker-head h2{margin:0;font-weight:400;font-size:28px}
+.close{width:56px;height:56px;border-radius:50%;background:var(--bg);font-size:28px}
+.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px}
+.pick{border:4px solid var(--bg);border-radius:24px;padding:10px;display:grid;gap:6px;font-size:22px;position:relative}
+.pick[aria-current="true"]{border-color:var(--ink)}
+.pick svg{width:100%;aspect-ratio:1;max-width:100%;max-height:22vh;pointer-events:none}
+.badge{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;border-radius:999px;padding:2px 10px;font-size:15px}
+
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+
+/* 그림 공통 */
+.pic .r{fill:#fff;stroke:var(--ink);stroke-width:6;stroke-linejoin:round;cursor:pointer;transition:fill .15s;transform-box:fill-box;transform-origin:center}
+.pic .fx{pointer-events:none}
+.pic .line{fill:none;stroke:var(--ink);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.pic .dot{fill:var(--ink)}
+.pic .white{fill:#fff;stroke:var(--ink);stroke-width:5}
+.pic .bubble{fill:#fff;stroke:var(--ink);stroke-width:4}
+.pic g{transform-box:view-box}
+.pic .pop{animation:pop .35s ease-out}
+@keyframes pop{40%{transform:scale(1.07)}}
+
+/* 완성하면 살아 움직이기 */
+.alive .fish{animation:swim 2.4s ease-in-out infinite;transform-origin:200px 200px}
+.alive .fish-tail{animation:wag .35s ease-in-out infinite alternate;transform-origin:112px 200px}
+.alive .bubble{animation:bub 1.8s ease-in infinite}
+.alive .bubble:nth-child(2){animation-delay:.5s}.alive .bubble:nth-child(3){animation-delay:1s}
+@keyframes swim{0%,100%{transform:translateX(-16px) rotate(-3deg)}50%{transform:translateX(16px) rotate(3deg)}}
+@keyframes wag{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+@keyframes bub{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:0}}
+.alive .bfly{animation:float 2s ease-in-out infinite}
+.alive .wingL,.alive .wingR{animation:flap .32s ease-in-out infinite alternate;transform-origin:200px 210px}
+@keyframes float{0%,100%{transform:translateY(10px)}50%{transform:translateY(-14px)}}
+@keyframes flap{to{transform:scaleX(.45)}}
+.alive .car{animation:drive 1.8s ease-in-out infinite}
+.pic g.wheel{transform-box:fill-box;transform-origin:center}
+.alive .wheel{animation:spin .55s linear infinite}
+@keyframes drive{0%,100%{transform:translate(-18px,0)}25%{transform:translate(0,-6px)}50%{transform:translate(18px,0)}75%{transform:translate(0,-4px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.alive .flower{animation:sway 2.2s ease-in-out infinite;transform-origin:200px 372px}
+.alive .head{animation:bloom 1s ease-in-out infinite alternate;transform-origin:200px 150px}
+@keyframes sway{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes bloom{to{transform:scale(1.08)}}
+.alive .cat{animation:hop 1.4s ease-in-out infinite}
+.alive .cat-tail{animation:wag 0.5s ease-in-out infinite alternate;transform-origin:262px 312px}
+.alive .cat-head{animation:tilt 1.4s ease-in-out infinite;transform-origin:200px 240px}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}}
+@keyframes tilt{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.alive .dino{animation:stomp 1.2s ease-in-out infinite}
+.alive .dino-neck{animation:nod .9s ease-in-out infinite alternate;transform-origin:235px 245px}
+.alive .dino-tail{animation:wag .45s ease-in-out infinite alternate;transform-origin:118px 255px}
+@keyframes stomp{0%,100%{transform:translate(-10px,0)}25%{transform:translate(0,-8px)}50%{transform:translate(10px,0)}75%{transform:translate(0,-8px)}}
+@keyframes nod{from{transform:rotate(-6deg)}to{transform:rotate(8deg)}}
+.alive .train{animation:chug .5s ease-in-out infinite alternate}
+.alive .smoke{animation:puff 1.4s ease-out infinite}
+.alive .smoke:nth-child(2){animation-delay:.45s}.alive .smoke:nth-child(3){animation-delay:.9s}
+@keyframes chug{from{transform:translate(-6px,0)}to{transform:translate(6px,-4px)}}
+@keyframes puff{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(-30px,-60px) scale(1.4);opacity:0}}
+.pic .smoke{transform-box:fill-box;transform-origin:center}
+.alive .whale{animation:bob 2s ease-in-out infinite;transform-origin:200px 230px}
+.alive .whale-tail{animation:flick .5s ease-in-out infinite alternate;transform-origin:318px 238px}
+.alive .spout{animation:spurt .7s ease-in-out infinite alternate;transform-origin:150px 128px}
+@keyframes bob{0%,100%{transform:translateY(8px) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+@keyframes flick{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+@keyframes spurt{from{transform:scaleY(.75)}to{transform:scaleY(1.15)}}
+
+/* 세로 화면: 그림판 위, 팔레트·도구 아래 */
+@media (orientation:portrait){
+  :root{--sw:min(13vw,62px);--tb:min(16vw,76px)}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"stage" "palette" "tools"}
+  .palette{grid-template-columns:repeat(var(--pcols,5),var(--sw));justify-content:center;justify-self:center;align-self:auto}
+  .tools{flex-direction:row;justify-content:center;gap:10px}
+  .hint{display:none}
+  .topbar h1{font-size:26px}
+  .bsz{width:42px;height:42px}
+  .mission{font-size:15px;margin-left:8px}
+  .dots{flex-wrap:nowrap;gap:5px}
+  .dots span{width:12px;height:12px;border-width:2.5px}
+  .topbar{flex-wrap:wrap;row-gap:6px}
+  .brush{gap:7px}
+}
+@media (prefers-reduced-motion:reduce){
+  .alive *{animation-duration:3s!important}
+  .pic .pop,.done{animation:none}
+}
+.install{display:flex;gap:18px;align-items:center;margin-top:18px;padding-top:18px;border-top:3px dashed var(--bg)}
+.qr{flex:none;width:132px;height:132px;background:#fff;border-radius:16px;padding:8px;box-shadow:0 0 0 3px var(--bg)}
+.qr svg{width:100%;height:100%;display:block}
+.install-text{min-width:0}
+.install h3{margin:0 0 6px;font-weight:400;font-size:22px}
+.install p{margin:0 0 6px;color:var(--muted);font-size:15px;line-height:1.45}
+.install .url{font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);word-break:break-all;user-select:text;-webkit-user-select:text}
+.lv-install{margin-top:6px;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:17px}
+@media (max-width:520px){.install{flex-direction:column;align-items:flex-start}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <div class="palette" id="palette" role="group" aria-label="색 고르기"></div>
+
+  <main class="stage">
+    <div class="topbar">
+      <div><h1 id="picName" style="display:inline">물고기</h1><span class="hint">색을 고르고 그림을 콕!</span><span class="mission" id="mission" hidden><i id="mColor"></i><span>반짝이는 곳!</span><span class="stars" id="stars">★ 0</span></span></div>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <div class="brush" id="brush" hidden role="group" aria-label="붓 굵기">
+        <button class="bsz" type="button" data-s="0" aria-label="가는 붓"><i style="--d:10px"></i></button>
+        <button class="bsz" type="button" data-s="1" aria-label="중간 붓"><i style="--d:20px"></i></button>
+        <button class="bsz" type="button" data-s="2" aria-label="굵은 붓"><i style="--d:32px"></i></button>
+        <button class="bsz rainbow" type="button" id="rainbow" aria-label="무지개 붓"><i></i></button>
+        <button class="bsz" type="button" id="guideBtn" aria-label="따라 그리기" hidden><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg></button>
+      </div>
+    </div>
+    <div class="board" id="board">
+      <svg id="guide" viewBox="0 0 400 400" hidden></svg>
+      <canvas id="paper" hidden></canvas>
+      <div class="done" id="done" hidden>다 칠했어요! <button id="next" type="button">다음 그림 ▶</button></div>
+    </div>
+  </main>
+
+  <nav class="tools" aria-label="도구">
+    <button class="tool" id="tPick" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span>그림</span></button>
+    <button class="tool" id="tUndo" type="button"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>되돌리기</span></button>
+    <button class="tool" id="tErase" type="button" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4.5 14.5 13 6a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11.5 19.5H8z"/><path d="M9 10l5 5"/><path d="M12 20h8"/></svg><span>지우개</span></button>
+    <button class="tool" id="tSound" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" id="soundIcon"></svg><span>소리</span></button>
+    <button class="tool" id="tReset" type="button" title="꾹 누르면 처음부터"><div class="hold"></div><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v5h5"/></svg><span>처음부터</span></button>
+  </nav>
+</div>
+
+<div class="picker" id="picker" hidden>
+  <div class="picker-card" role="dialog" aria-label="그림 고르기">
+    <div class="picker-head"><h2>어떤 그림을 칠할까?</h2><button class="close" id="pClose" type="button" aria-label="닫기">✕</button></div>
+    <div class="picks" id="picks"></div>
+    <p class="parent-note">어른 설정(나이 단계): 위쪽 제목을 2초 동안 꾹 누르세요</p>
+  </div>
+</div>
+<div class="picker" id="settings" hidden>
+  <div class="picker-card" role="dialog" aria-label="나이 단계" style="width:min(620px,100%)">
+    <div class="picker-head"><h2>나이 단계</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
+    <div class="levels" id="levels"></div>
+    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요.</p>
+    <div class="install">
+      <div class="qr" id="qr" aria-label="설치 QR 코드"></div>
+      <div class="install-text">
+        <h3>다른 기기에 설치</h3>
+        <p>다른 태블릿·휴대폰 카메라로 QR을 찍고, Chrome 메뉴에서 <b>홈 화면에 추가</b>를 누르세요.</p>
+        <p class="url">https://hanjin-bbang.github.io/kids-play/</p>
+        <button class="lv-install" id="installBtn" type="button" hidden>이 기기에 앱으로 설치</button>
+      </div>
+    </div>
+  </div>
+</div>
+<canvas id="fx"></canvas>
+
+<script>
+const COLORS=[
+  {name:'빨간색',hex:'#F2545B'},{name:'주황색',hex:'#FF9F43'},{name:'노란색',hex:'#FFD93D'},
+  {name:'초록색',hex:'#5BC27A'},{name:'하늘색',hex:'#6EC6F0'},{name:'파란색',hex:'#3D7BE0'},
+  {name:'보라색',hex:'#9B6BE0'},{name:'분홍색',hex:'#FF8FC1'},{name:'갈색',hex:'#A8714A'},{name:'까만색',hex:'#3A3A48'}
+];
+const petals=[0,1,2,3,4].map(k=>`<g transform="rotate(${k*72} 200 150)"><ellipse class="r" data-id="p${k}" cx="200" cy="92" rx="32" ry="46"/></g>`).join('');
+const PICS=[
+ {id:'fish',name:'물고기',svg:`<svg viewBox="0 0 400 400" class="pic"><defs><clipPath id="CLIP"><ellipse cx="215" cy="200" rx="115" ry="75"/></clipPath></defs>
+  <g class="fish">
+   <g class="fish-tail"><path class="r" data-id="tail" d="M112 200 L40 138 Q58 200 40 262 Z"/></g>
+   <path class="r" data-id="finTop" d="M165 140 Q205 62 262 130 Z"/>
+   <path class="r" data-id="finBottom" d="M188 262 Q214 326 252 266 Z"/>
+   <ellipse class="r" data-id="body" cx="215" cy="200" rx="115" ry="75"/>
+   <g clip-path="url(#CLIP)"><path class="r" data-id="stripe1" d="M168 118 Q150 200 168 282 L196 282 Q178 200 196 118 Z"/><path class="r" data-id="stripe2" d="M236 118 Q218 200 236 282 L264 282 Q246 200 264 118 Z"/></g>
+   <ellipse class="fx line" cx="215" cy="200" rx="115" ry="75"/>
+   <circle class="fx white" cx="284" cy="184" r="17"/><circle class="fx dot" cx="289" cy="184" r="8"/>
+   <path class="fx line" d="M322 222 Q308 232 294 224"/>
+  </g>
+  <g class="fx"><circle class="bubble" cx="352" cy="128" r="11"/><circle class="bubble" cx="368" cy="92" r="7"/><circle class="bubble" cx="347" cy="62" r="5"/></g></svg>`},
+ {id:'butterfly',name:'나비',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="bfly">
+   <g class="wingL"><path class="r" data-id="wUL" d="M195 192 C150 88 58 68 52 140 C48 202 122 222 195 206 Z"/><path class="r" data-id="wLL" d="M195 212 C128 214 82 252 98 302 C114 344 176 302 195 236 Z"/><circle class="r" data-id="sUL" cx="118" cy="146" r="22"/><circle class="r" data-id="sLL" cx="142" cy="276" r="14"/></g>
+   <g class="wingR"><path class="r" data-id="wUR" d="M205 192 C250 88 342 68 348 140 C352 202 278 222 205 206 Z"/><path class="r" data-id="wLR" d="M205 212 C272 214 318 252 302 302 C286 344 224 302 205 236 Z"/><circle class="r" data-id="sUR" cx="282" cy="146" r="22"/><circle class="r" data-id="sLR" cx="258" cy="276" r="14"/></g>
+   <path class="fx line" d="M194 136 Q178 100 160 90"/><path class="fx line" d="M206 136 Q222 100 240 90"/>
+   <circle class="fx dot" cx="158" cy="89" r="8"/><circle class="fx dot" cx="242" cy="89" r="8"/>
+   <g class="r" data-id="bBody"><ellipse cx="200" cy="218" rx="14" ry="62"/><circle cx="200" cy="146" r="18"/></g>
+   <circle class="fx dot" cx="194" cy="143" r="3.5"/><circle class="fx dot" cx="206" cy="143" r="3.5"/>
+  </g></svg>`},
+ {id:'car',name:'자동차',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="car">
+   <path class="r" data-id="cabin" d="M112 188 L146 126 Q151 118 161 118 L259 118 Q269 118 275 126 L306 188 Z"/>
+   <path class="r" data-id="carBody" d="M48 248 L48 210 Q52 192 80 188 L330 188 Q356 192 362 216 L362 248 Q362 264 346 264 L64 264 Q48 264 48 248 Z"/>
+   <path class="r" data-id="winBack" d="M138 180 L162 134 L201 134 L201 180 Z"/>
+   <path class="r" data-id="winFront" d="M213 180 L213 134 L257 134 L284 180 Z"/>
+   <path class="fx line" d="M207 196 L207 256"/><path class="fx line" d="M222 214 L244 214"/>
+   <path class="r" data-id="light" d="M340 206 Q356 208 358 230 L340 230 Z"/>
+   <g class="wheel"><circle class="r" data-id="wheel1" cx="122" cy="264" r="34"/><circle class="fx white" cx="122" cy="264" r="12"/><path class="fx line" d="M122 237 L122 252"/></g>
+   <g class="wheel"><circle class="r" data-id="wheel2" cx="290" cy="264" r="34"/><circle class="fx white" cx="290" cy="264" r="12"/><path class="fx line" d="M290 237 L290 252"/></g>
+  </g><path class="fx line" d="M24 304 L376 304"/></svg>`},
+ {id:'flower',name:'꽃',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="flower">
+   <path class="r" data-id="stem" d="M194 210 Q186 296 196 372 L208 372 Q200 296 208 210 Z"/>
+   <path class="r" data-id="leafL" d="M196 302 Q140 268 116 298 Q148 334 196 316 Z"/>
+   <path class="r" data-id="leafR" d="M204 282 Q262 246 288 276 Q256 312 204 296 Z"/>
+   <g class="head">${petals}<circle class="r" data-id="center" cx="200" cy="150" r="36"/>
+    <circle class="fx dot" cx="188" cy="143" r="4.5"/><circle class="fx dot" cx="212" cy="143" r="4.5"/><path class="fx line" style="stroke-width:4" d="M187 159 Q200 170 213 159"/></g>
+  </g><path class="fx line" d="M140 374 L260 374"/></svg>`},
+ {id:'cat',name:'고양이',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="cat">
+   <g class="cat-tail"><path class="r" data-id="cTail" d="M262 322 Q342 330 342 262 Q342 222 318 214 Q304 224 318 236 Q326 264 312 290 Q296 310 258 302 Z"/></g>
+   <ellipse class="r" data-id="cBody" cx="200" cy="292" rx="86" ry="74"/>
+   <ellipse class="r" data-id="cBelly" cx="200" cy="306" rx="45" ry="50"/>
+   <g class="r" data-id="cPaws"><ellipse cx="168" cy="360" rx="26" ry="14"/><ellipse cx="232" cy="360" rx="26" ry="14"/></g>
+   <g class="cat-head">
+    <path class="r" data-id="cEarL" d="M120 140 L130 60 L186 112 Z"/>
+    <path class="r" data-id="cEarR" d="M280 140 L270 60 L214 112 Z"/>
+    <circle class="r" data-id="cHead" cx="200" cy="162" r="82"/>
+    <circle class="fx dot" cx="170" cy="156" r="9"/><circle class="fx dot" cx="230" cy="156" r="9"/>
+    <path class="fx dot" d="M191 180 L209 180 L200 191 Z"/>
+    <path class="fx line" style="stroke-width:4" d="M200 191 Q192 203 181 197 M200 191 Q208 203 219 197"/>
+    <path class="fx line" style="stroke-width:4" d="M150 184 L112 178 M150 194 L114 200 M250 184 L288 178 M250 194 L286 200"/>
+   </g>
+  </g></svg>`},
+ {id:'dino',name:'공룡',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="dino">
+   <g class="dino-tail"><path class="r" data-id="dTail" d="M118 262 Q46 282 18 238 Q62 256 120 236 Z"/></g>
+   <path class="r" data-id="dLeg1" d="M112 288 L112 345 Q112 353 120 353 L142 353 Q150 353 150 345 L150 292 Z"/>
+   <path class="r" data-id="dLeg2" d="M200 288 L200 345 Q200 353 208 353 L230 353 Q238 353 238 345 L238 288 Z"/>
+   <g class="r" data-id="dSpikes"><path d="M118 214 L134 178 L152 208 Z"/><path d="M154 204 L172 166 L190 203 Z"/><path d="M192 207 L210 174 L226 216 Z"/></g>
+   <ellipse class="r" data-id="dBody" cx="170" cy="256" rx="86" ry="56"/>
+   <g class="dino-neck"><path class="r" data-id="dNeck" d="M214 226 Q250 200 255 132 Q258 92 290 88 Q332 86 336 112 Q338 134 312 137 Q286 141 283 162 Q279 222 246 272 Z"/>
+    <circle class="fx dot" cx="309" cy="106" r="6.5"/><path class="fx line" style="stroke-width:4" d="M316 124 Q327 125 333 118"/></g>
+  </g><path class="fx line" d="M40 356 L360 356"/></svg>`},
+ {id:'train',name:'기차',svg:`<svg viewBox="0 0 400 400" class="pic">
+  <g class="fx"><circle class="smoke white" cx="105" cy="118" r="14"/><circle class="smoke white" cx="96" cy="96" r="18"/><circle class="smoke white" cx="84" cy="70" r="22"/></g>
+  <g class="train">
+   <path class="r" data-id="tChim" d="M90 202 L90 162 L80 140 L130 140 L120 162 L120 202 Z"/>
+   <path class="r" data-id="tBoiler" d="M70 200 L252 200 L252 282 L70 282 Q58 282 58 270 L58 212 Q58 200 70 200 Z"/>
+   <path class="r" data-id="tCab" d="M250 132 L340 132 L340 282 L250 282 Z"/>
+   <path class="r" data-id="tRoof" d="M238 116 L352 116 L352 136 L238 136 Z"/>
+   <path class="r" data-id="tWin" d="M268 152 L322 152 L322 198 L268 198 Z"/>
+   <g class="wheel"><circle class="r" data-id="tW1" cx="105" cy="290" r="30"/><circle class="fx white" cx="105" cy="290" r="10"/><path class="fx line" d="M105 266 L105 280"/></g>
+   <g class="wheel"><circle class="r" data-id="tW2" cx="190" cy="290" r="30"/><circle class="fx white" cx="190" cy="290" r="10"/><path class="fx line" d="M190 266 L190 280"/></g>
+   <g class="wheel"><circle class="r" data-id="tW3" cx="295" cy="290" r="30"/><circle class="fx white" cx="295" cy="290" r="10"/><path class="fx line" d="M295 266 L295 280"/></g>
+  </g><path class="fx line" d="M24 324 L376 324"/></svg>`},
+ {id:'whale',name:'고래',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="whale">
+   <g class="spout"><path class="r" data-id="wWater" d="M140 128 Q122 92 98 96 Q114 68 150 78 Q186 68 202 96 Q178 92 160 128 Z"/></g>
+   <g class="whale-tail"><path class="r" data-id="wTail" d="M310 232 Q348 204 368 160 Q384 204 362 222 Q388 228 382 264 Q350 246 314 252 Z"/></g>
+   <path class="r" data-id="wBody" d="M60 232 Q60 140 172 130 Q292 126 322 202 Q332 252 300 282 Q240 320 150 312 Q60 302 60 232 Z"/>
+   <path class="r" data-id="wBelly" d="M74 262 Q150 302 290 280 Q240 316 150 312 Q92 304 74 262 Z"/>
+   <path class="r" data-id="wFin" d="M172 274 Q180 326 224 324 Q218 292 204 276 Z"/>
+   <circle class="fx dot" cx="110" cy="214" r="8"/><path class="fx line" style="stroke-width:4" d="M70 244 Q92 256 118 250"/>
+  </g></svg>`}
+];
+
+COLORS.push({name:'연분홍',hex:'#FFC6DC'},{name:'연노랑',hex:'#FFF0A6'},{name:'연두색',hex:'#B8E986'},{name:'연하늘',hex:'#BFE6FA'},{name:'연보라',hex:'#D3C0F5'});
+/* 나이 단계: 0 = 2~3세, 1 = 3~4세, 2 = 5세 이상 */
+const LEVELS=[
+  {label:'2~3세',desc:'큰 칸 3개 · 색 4가지 · 아무 데나 눌러도 칠해져요 · 그리기는 굵은 무지개 붓',colors:[0,2,5,3],cols:2,pcols:4},
+  {label:'3~4세',desc:'칸 5~10개 · 색 10가지 · 색 이름 듣기 · 붓 굵기 3단계',colors:[0,1,2,3,4,5,6,7,8,9],cols:2,pcols:5},
+  {label:'5세 이상',desc:'연한 색까지 15가지 · 반짝이는 곳 색칠 미션 · 점선 따라 그리기',colors:[...Array(15).keys()],cols:3,pcols:5}
+];
+/* 2~3세용: 작은 칸을 큰 덩어리로 묶어서 한 번에 칠함 */
+const GROUPS={
+  fish:[['body','stripe1','stripe2'],['tail'],['finTop','finBottom']],
+  butterfly:[['wUL','wLL','sUL','sLL'],['wUR','wLR','sUR','sLR'],['bBody']],
+  car:[['carBody'],['cabin','winBack','winFront','light'],['wheel1','wheel2']],
+  flower:[['p0','p1','p2','p3','p4'],['center'],['stem','leafL','leafR']],
+  cat:[['cHead','cEarL','cEarR'],['cBody','cBelly','cPaws'],['cTail']],
+  dino:[['dBody','dNeck','dTail'],['dLeg1','dLeg2'],['dSpikes']],
+  train:[['tBoiler','tChim'],['tCab','tRoof','tWin'],['tW1','tW2','tW3']],
+  whale:[['wBody','wTail','wFin'],['wBelly'],['wWater']]
+};
+const KEY='colorplay.v1',DKEY='colorplay.draw';
+let S={pic:0,color:0,eraser:false,sound:true,fills:{},mode:'color',size:1,rainbow:false,level:1,stars:0,guide:0};
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'));S.eraser=false}catch(e){}
+if(S.pic>=PICS.length)S.pic=0;
+const stacks={};
+const save=()=>{try{const{eraser,...k}=S;localStorage.setItem(KEY,JSON.stringify(k))}catch(e){}};
+const $=id=>document.getElementById(id);
+const board=$('board'),done=$('done'),paper=$('paper'),pc=paper.getContext('2d');
+let svg=null,regions=[],uid=0,mission=null;
+
+/* 소리 */
+let ac=null;
+function tone(f,dur=.13,when=0,vol=.16){
+  if(!S.sound)return;
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+    const t=ac.currentTime+when,o=ac.createOscillator(),g=ac.createGain();
+    o.type='sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*1.4,t+dur);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+.03)}catch(e){}
+}
+function speak(text){
+  if(!S.sound)return;
+  try{const u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=.95;u.pitch=1.2;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+
+/* 반짝이·색종이 */
+const cv=$('fx'),cx=cv.getContext('2d');let parts=[],running=false;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function sizeCv(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0)}
+sizeCv();addEventListener('resize',sizeCv);
+function loop(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  parts=parts.filter(p=>p.life>0);
+  for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=.98;p.life-=1;p.rot+=p.vr;
+    cx.save();cx.globalAlpha=Math.min(1,p.life/25);cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.c;
+    if(p.sq)cx.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);else{cx.beginPath();cx.arc(0,0,p.s/2,0,7);cx.fill()}cx.restore()}
+  if(parts.length)requestAnimationFrame(loop);else{running=false;cx.clearRect(0,0,innerWidth,innerHeight)}
+}
+function go(){if(!running){running=true;requestAnimationFrame(loop)}}
+function burst(x,y,c,n=14){
+  if(reduce)return;
+  for(let i=0;i<n;i++){const a=Math.random()*6.28,v=3+Math.random()*4;
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:.15,life:32+Math.random()*12,s:7+Math.random()*6,c,rot:0,vr:0,sq:false})}
+  go();
+}
+function confetti(){
+  const n=reduce?0:140;
+  for(let i=0;i<n;i++)parts.push({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*.4,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,g:.06,life:150+Math.random()*60,s:10+Math.random()*8,c:COLORS[i%9].hex,rot:Math.random()*6,vr:(Math.random()-.5)*.3,sq:true});
+  go();
+}
+
+/* 팔레트 (단계별 색 개수) */
+const pal=$('palette');
+function buildPalette(){
+  const L=LEVELS[S.level];pal.innerHTML='';
+  pal.style.setProperty('--cols',L.cols);pal.style.setProperty('--pcols',L.pcols);
+  if(!L.colors.includes(S.color))S.color=L.colors[0];
+  L.colors.forEach(i=>{const c=COLORS[i],b=document.createElement('button');b.type='button';b.className='swatch';b.dataset.i=i;b.style.background=c.hex;b.setAttribute('aria-label',c.name);
+    b.addEventListener('click',()=>{S.color=i;S.eraser=false;if(S.mode==='draw'&&S.level>0)S.rainbow=false;syncTools();speak(c.name);tone(440+(i%10)*40);save()});pal.appendChild(b)});
+}
+
+/* 색칠 그림 */
+function makeSvg(p){return p.svg.replace(/CLIP/g,'clip'+(++uid))}
+function paint(root,fills){root.querySelectorAll('.r').forEach(r=>{r.style.fill=fills[r.dataset.id]||''})}
+function fillsOf(id){return S.fills[id]||(S.fills[id]={})}
+const REG={};function regIds(p){return REG[p.id]||(REG[p.id]=[...p.svg.matchAll(/data-id="([^"]+)"/g)].map(m=>m[1]))}
+function isDone(p){const f=S.fills[p.id]||{};return regIds(p).every(id=>f[id])}
+function units(p){return S.level===0?GROUPS[p.id]:regIds(p).map(id=>[id])}
+
+function render(){
+  if(svg){svg.remove();svg=null;regions=[]}
+  mission=null;
+  const draw=S.mode==='draw';
+  paper.hidden=!draw;$('brush').hidden=!draw;$('dots').hidden=draw;$('mission').hidden=true;
+  document.querySelector('.hint').textContent=draw?'손가락으로 쓱쓱 그려요':(S.level===0?'아무 데나 콕!':'색을 고르고 그림을 콕!');
+  document.querySelectorAll('.bsz[data-s]').forEach(b=>b.hidden=S.level===0);
+  $('guideBtn').hidden=S.level!==2;
+  drawGuide();
+  if(draw){$('picName').textContent='자유 그리기';done.hidden=true;sizePaper();syncTools();return}
+  const p=PICS[S.pic];
+  board.insertAdjacentHTML('afterbegin',makeSvg(p));
+  svg=board.querySelector('svg.pic');regions=[...svg.querySelectorAll('.r')];
+  paint(svg,fillsOf(p.id));
+  $('picName').textContent=p.name;
+  stacks[p.id]=stacks[p.id]||[];
+  update(false);syncTools();
+  if(S.level===2)newMission('');
+}
+function update(celebrate){
+  if(!svg)return;
+  const p=PICS[S.pic],f=fillsOf(p.id);
+  $('dots').innerHTML=units(p).map(u=>`<span style="background:${u.every(id=>f[id])?f[u[0]]:'#fff'}"></span>`).join('');
+  const complete=regions.every(r=>f[r.dataset.id]);
+  const was=svg.classList.contains('alive');
+  svg.classList.toggle('alive',complete);done.hidden=!complete;
+  if(complete){mission=null;regions.forEach(r=>r.classList.remove('target'));$('mission').hidden=true}
+  if(complete&&!was&&celebrate){confetti();speak('우와! '+p.name+' 다 칠했어요!');[523,659,784,1047].forEach((n,i)=>tone(n,.18,i*.12,.2));return true}
+  return false;
+}
+
+/* 5세 이상: 반짝이는 곳 미션 */
+function newMission(prefix){
+  regions.forEach(r=>r.classList.remove('target'));
+  const f=fillsOf(PICS[S.pic].id),open=regions.filter(r=>!f[r.dataset.id]);
+  if(!open.length){mission=null;$('mission').hidden=true;return}
+  const r=open[Math.floor(Math.random()*open.length)],ci=Math.floor(Math.random()*10);
+  mission={id:r.dataset.id,ci};r.classList.add('target');
+  $('mColor').style.background=COLORS[ci].hex;$('stars').textContent='★ '+S.stars;$('mission').hidden=false;
+  speak(prefix+'반짝이는 곳을 '+COLORS[ci].name+'으로 칠해볼까?');
+}
+
+function fillUnit(ids,next,x,y){
+  const p=PICS[S.pic],f=fillsOf(p.id);
+  stacks[p.id].push(ids.map(id=>({id,prev:f[id]||null})));
+  ids.forEach(id=>{if(next)f[id]=next;else delete f[id];
+    const el=svg.querySelector(`[data-id="${id}"]`);el.style.fill=next||'';el.classList.remove('pop');void el.getBoundingClientRect();el.classList.add('pop')});
+  burst(x,y,next||'#C9D3DE',S.level===0?24:14);
+  tone(S.eraser?300:500+(S.color%10)*35);
+  save();
+  const hitMission=mission&&ids.includes(mission.id);
+  const finished=update(true);
+  if(S.level===2&&!finished){
+    if(hitMission&&next===COLORS[mission.ci].hex){S.stars++;save();burst(x,y,'#FFC93C',30);tone(1047,.2,.1,.2);newMission('잘했어요! 별 하나! 이번엔 ')}
+    else if(hitMission||!mission||f[mission.id])newMission('');
+  }
+}
+
+board.addEventListener('pointerdown',e=>{
+  if(!svg||e.target.closest('.done'))return;
+  const p=PICS[S.pic],f=fillsOf(p.id),next=S.eraser?null:COLORS[S.color].hex;
+  const r=e.target.closest('.r');
+  let unit=r&&svg.contains(r)?(S.level===0?units(p).find(u=>u.includes(r.dataset.id)):[r.dataset.id]):null;
+  if(S.level===0&&!S.eraser&&(!unit||unit.every(id=>f[id]===next)))unit=units(p).find(u=>u.some(id=>!f[id]))||unit;
+  if(!unit)return;
+  e.preventDefault();
+  if(unit.every(id=>(f[id]||null)===next)){tone(330,.08);return}
+  fillUnit(unit,next,e.clientX,e.clientY);
+});
+
+/* 자유 그리기 — 점은 그림판 중심 기준, 짧은 변 길이로 나눈 값으로 저장 (화면을 돌려도 비율 유지) */
+const SIZES=[.012,.026,.048];
+let strokes=[];
+try{strokes=JSON.parse(localStorage.getItem(DKEY)||'[]')}catch(e){strokes=[]}
+const saveDraw=()=>{try{localStorage.setItem(DKEY,JSON.stringify(strokes.slice(-400)))}catch(e){}};
+let PW=1,PH=1,PS=1;
+function sizePaper(){
+  if(paper.hidden)return;
+  const r=paper.getBoundingClientRect(),d=devicePixelRatio||1;
+  PW=r.width;PH=r.height;PS=Math.min(PW,PH);
+  paper.width=Math.round(PW*d);paper.height=Math.round(PH*d);pc.setTransform(d,0,0,d,0,0);
+  redraw();
+}
+new ResizeObserver(sizePaper).observe(board);
+const toN=e=>{const r=paper.getBoundingClientRect();return[+(((e.clientX-r.left)-PW/2)/PS).toFixed(4),+(((e.clientY-r.top)-PH/2)/PS).toFixed(4)]};
+const toP=p=>[PW/2+p[0]*PS,PH/2+p[1]*PS];
+function segColor(st,i){return st.rb?`hsl(${(st.h0+i*5)%360} 85% 58%)`:st.c}
+function drawSeg(st,i){
+  const erase=st.c===null&&!st.rb;
+  pc.globalCompositeOperation=erase?'destination-out':'source-over';
+  pc.lineCap='round';pc.lineJoin='round';pc.lineWidth=st.w*PS;
+  const b=toP(st.pts[i]);
+  if(i===0){pc.fillStyle=erase?'#000':segColor(st,0);pc.beginPath();pc.arc(b[0],b[1],st.w*PS/2,0,7);pc.fill();return}
+  const a=toP(st.pts[i-1]);
+  pc.strokeStyle=erase?'#000':segColor(st,i);
+  pc.beginPath();pc.moveTo(a[0],a[1]);pc.lineTo(b[0],b[1]);pc.stroke();
+}
+function redraw(){pc.clearRect(0,0,PW,PH);for(const st of strokes)for(let i=0;i<st.pts.length;i++)drawSeg(st,i);pc.globalCompositeOperation='source-over'}
+const live=new Map();
+paper.addEventListener('pointerdown',e=>{
+  e.preventDefault();paper.setPointerCapture(e.pointerId);
+  const w=S.eraser?SIZES[2]*1.3:(S.level===0?SIZES[2]:SIZES[S.size]);
+  const st={c:S.eraser?null:COLORS[S.color].hex,w,rb:!S.eraser&&S.rainbow,h0:Math.floor(Math.random()*360),pts:[toN(e)]};
+  strokes.push(st);live.set(e.pointerId,st);drawSeg(st,0);
+  tone(S.eraser?280:420+(S.rainbow?Math.random()*300:(S.color%10)*35),.09);
+});
+paper.addEventListener('pointermove',e=>{
+  const st=live.get(e.pointerId);if(!st)return;
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  for(const ev of (evs.length?evs:[e])){
+    const p=toN(ev),q=st.pts[st.pts.length-1];
+    if(Math.hypot(p[0]-q[0],p[1]-q[1])<.003)continue;
+    st.pts.push(p);drawSeg(st,st.pts.length-1);
+  }
+  pc.globalCompositeOperation='source-over';
+});
+const endStroke=e=>{if(live.delete(e.pointerId))saveDraw()};
+['pointerup','pointercancel','lostpointercapture'].forEach(t=>paper.addEventListener(t,endStroke));
+document.querySelectorAll('.bsz[data-s]').forEach(b=>b.addEventListener('click',()=>{S.size=+b.dataset.s;S.eraser=false;syncTools();tone(380+S.size*120);save()}));
+$('rainbow').addEventListener('click',()=>{S.rainbow=!S.rainbow;S.eraser=false;syncTools();if(S.rainbow)speak('무지개');tone(700);save()});
+
+/* 5세 이상: 점선 따라 그리기 */
+const starPts=[...Array(10).keys()].map(k=>{const a=-Math.PI/2+k*Math.PI/5,R=k%2?62:150;return(200+R*Math.cos(a)).toFixed(1)+' '+(212+R*Math.sin(a)).toFixed(1)}).join(' L');
+const GUIDES=[null,
+  {name:'동그라미',svg:'<circle cx="200" cy="200" r="130"/>'},
+  {name:'하트',svg:'<path d="M200 330 C76 248 56 158 118 118 C160 92 196 118 200 150 C204 118 240 92 282 118 C344 158 324 248 200 330 Z"/>'},
+  {name:'별',svg:`<path d="M${starPts} Z"/>`},
+  {name:'집',svg:'<path d="M90 330 L90 190 L200 86 L310 190 L310 330 Z M170 330 L170 255 L230 255 L230 330"/>'}];
+function drawGuide(){
+  const g=GUIDES[S.guide],show=S.mode==='draw'&&S.level===2&&!!g;
+  $('guide').toggleAttribute('hidden',!show);$('guide').innerHTML=show?g.svg:'';
+  $('guideBtn').setAttribute('aria-pressed',String(show));
+}
+$('guideBtn').addEventListener('click',()=>{S.guide=(S.guide+1)%GUIDES.length;drawGuide();save();tone(520);
+  if(GUIDES[S.guide])speak(GUIDES[S.guide].name+' 따라 그려볼까?')});
+
+/* 도구 */
+function syncTools(){
+  const draw=S.mode==='draw';
+  [...pal.children].forEach(b=>b.setAttribute('aria-pressed',String(!S.eraser&&!(draw&&S.rainbow)&&+b.dataset.i===S.color)));
+  $('tErase').classList.toggle('on',S.eraser);$('tErase').setAttribute('aria-pressed',String(S.eraser));
+  $('tSound').setAttribute('aria-pressed',String(S.sound));
+  $('soundIcon').innerHTML=S.sound?'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>':'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/>';
+  $('brush').style.setProperty('--cur',COLORS[S.color].hex);
+  document.querySelectorAll('.bsz[data-s]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===S.size)));
+  $('rainbow').setAttribute('aria-pressed',String(S.rainbow));
+}
+$('tErase').addEventListener('click',()=>{S.eraser=!S.eraser;syncTools();if(S.eraser)speak('지우개');tone(300)});
+$('tSound').addEventListener('click',()=>{S.sound=!S.sound;if(!S.sound)try{speechSynthesis.cancel()}catch(e){};syncTools();tone(600);save()});
+$('tUndo').addEventListener('click',()=>{
+  if(S.mode==='draw'){if(!strokes.length){tone(250,.1);return}strokes.pop();redraw();saveDraw();tone(380,.1);return}
+  const p=PICS[S.pic],last=stacks[p.id].pop();if(!last){tone(250,.1);return}
+  const f=fillsOf(p.id);
+  last.forEach(({id,prev})=>{if(prev)f[id]=prev;else delete f[id];svg.querySelector(`[data-id="${id}"]`).style.fill=prev||''});
+  tone(380,.1);save();update(false);
+  if(S.level===2&&!mission)newMission('');
+});
+const rb=$('tReset');let holdT=null;
+const endHold=()=>{clearTimeout(holdT);rb.classList.remove('holding')};
+rb.addEventListener('pointerdown',()=>{rb.classList.add('holding');holdT=setTimeout(()=>{
+  endHold();tone(220,.25);
+  if(S.mode==='draw'){strokes=[];redraw();saveDraw();speak('새 종이예요');return}
+  const p=PICS[S.pic];S.fills[p.id]={};stacks[p.id]=[];paint(svg,{});update(false);save();
+  if(S.level===2)newMission('처음부터 다시! ');else speak('처음부터 다시 칠해요');
+},900)});
+['pointerup','pointerleave','pointercancel'].forEach(t=>rb.addEventListener(t,endHold));
+
+/* 그림 고르기 */
+const picker=$('picker');
+const DRAW_THUMB=`<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F4F9FC"/><path d="M70 270 Q120 120 170 230 T270 200 T340 120" fill="none" stroke="#F2545B" stroke-width="22" stroke-linecap="round"/><path d="M70 320 Q160 260 230 310 T340 280" fill="none" stroke="#3D7BE0" stroke-width="22" stroke-linecap="round"/><circle cx="110" cy="110" r="34" fill="#FFD93D"/><path d="M250 90 L300 60 L320 110 Z" fill="#5BC27A"/></svg>`;
+function openPicker(){
+  const box=$('picks');box.innerHTML='';
+  const d=document.createElement('button');d.type='button';d.className='pick';
+  d.setAttribute('aria-current',String(S.mode==='draw'));
+  d.innerHTML=DRAW_THUMB+'<span>자유 그리기</span>';
+  d.addEventListener('click',()=>{S.mode='draw';S.eraser=false;save();picker.hidden=true;render();speak('자유 그리기');tone(520)});
+  box.appendChild(d);
+  PICS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='pick';
+    b.setAttribute('aria-current',String(S.mode==='color'&&i===S.pic));
+    b.innerHTML=makeSvg(p)+`<span>${p.name}</span>`+(isDone(p)?'<span class="badge">완성</span>':'');
+    paint(b,S.fills[p.id]||{});
+    b.addEventListener('click',()=>{S.mode='color';S.pic=i;S.eraser=false;save();picker.hidden=true;render();if(S.level!==2)speak(p.name);tone(520)});
+    box.appendChild(b)});
+  picker.hidden=false;
+}
+$('tPick').addEventListener('click',()=>{openPicker();tone(480)});
+$('pClose').addEventListener('click',()=>{picker.hidden=true});
+picker.addEventListener('click',e=>{if(e.target===picker)picker.hidden=true});
+$('next').addEventListener('click',()=>{S.pic=(S.pic+1)%PICS.length;save();render();if(S.level!==2)speak(PICS[S.pic].name);tone(520)});
+
+/* 어른 설정: 제목을 2초 꾹 */
+const settings=$('settings');
+function openSettings(){
+  const box=$('levels');box.innerHTML='';
+  LEVELS.forEach((L,i)=>{const b=document.createElement('button');b.type='button';b.className='lv';b.setAttribute('aria-pressed',String(i===S.level));
+    b.innerHTML=`<div>${L.label}<small>${L.desc}</small></div>`+(i===S.level?'<b>사용 중</b>':'');
+    b.addEventListener('click',()=>{S.level=i;S.eraser=false;if(i===0)S.rainbow=true;buildPalette();save();settings.hidden=true;render();tone(600)});
+    box.appendChild(b)});
+  settings.hidden=false;
+}
+let pressT=null;const title=$('picName');
+title.addEventListener('pointerdown',()=>{pressT=setTimeout(()=>{tone(700,.15);openSettings()},2000)});
+['pointerup','pointerleave','pointercancel'].forEach(t=>title.addEventListener(t,()=>clearTimeout(pressT)));
+title.addEventListener('contextmenu',e=>e.preventDefault());
+$('sClose').addEventListener('click',()=>{settings.hidden=true});
+settings.addEventListener('click',e=>{if(e.target===settings)settings.hidden=true});
+
+buildPalette();render();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+  /* 설치 QR: 인터넷이 없으면 주소 글자만 보여요 */
+  try{const q=qrcode(0,'M');q.addData("https://hanjin-bbang.github.io/kids-play/");q.make();
+    document.getElementById('qr').innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true});}catch(e){document.getElementById('qr').hidden=true}
+  /* 이 기기에 설치 버튼 (Chrome이 설치를 허용할 때만 보임) */
+  let deferred=null;const btn=document.getElementById('installBtn');
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;btn.hidden=false});
+  btn.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;btn.hidden=true});
+  addEventListener('appinstalled',()=>{btn.hidden=true});
+  if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+})();
+</script>
+</body>
+</html>
