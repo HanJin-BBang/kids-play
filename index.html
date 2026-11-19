@@ -121,10 +121,10 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .picker-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .picker-head h2{margin:0;font-weight:400;font-size:28px}
 .close{width:56px;height:56px;border-radius:50%;background:var(--bg);font-size:28px}
-.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px}
-.pick{border:4px solid var(--bg);border-radius:24px;padding:10px;display:grid;gap:6px;font-size:22px;position:relative}
+.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.pick{border:4px solid var(--bg);border-radius:24px;padding:10px 6px;display:grid;gap:6px;font-size:clamp(16px,2.6vh,20px);white-space:nowrap;position:relative}
 .pick[aria-current="true"]{border-color:var(--ink)}
-.pick svg{width:100%;aspect-ratio:1;max-width:100%;max-height:22vh;pointer-events:none}
+.pick svg{width:100%;aspect-ratio:1;max-width:100%;max-height:18vh;pointer-events:none}
 .badge{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;border-radius:999px;padding:2px 10px;font-size:15px}
 
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
@@ -183,6 +183,57 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 @keyframes bob{0%,100%{transform:translateY(8px) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 @keyframes flick{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
 @keyframes spurt{from{transform:scaleY(.75)}to{transform:scaleY(1.15)}}
+/* 탈것 */
+.alive .bus,.alive .firetruck,.alive .dump{animation:drive 1.8s ease-in-out infinite}
+.alive .ladder{animation:ladder 1.6s ease-in-out infinite alternate;transform-origin:232px 166px}
+.alive .siren{animation:flash .5s steps(2) infinite}
+.alive .bed{animation:tip 1.6s ease-in-out infinite alternate;transform-origin:56px 240px}
+.alive .excavator{animation:float 2.4s ease-in-out infinite}
+.alive .arm{animation:dig 1.4s ease-in-out infinite alternate;transform-origin:254px 192px}
+.alive .bucket{animation:curl 1.4s ease-in-out infinite alternate;transform-origin:360px 202px}
+@keyframes ladder{to{transform:rotate(-28deg)}}
+@keyframes flash{50%{opacity:.3}}
+@keyframes tip{to{transform:rotate(-22deg)}}
+@keyframes dig{to{transform:rotate(-14deg)}}
+@keyframes curl{to{transform:rotate(30deg)}}
+@keyframes doorop{to{transform:scaleX(.25)}}
+.pic g.door.jiggle{animation:doorop .3s ease-in-out 2 alternate;transform-origin:246px 206px}
+.pic g.ladder.jiggle{animation:ladder .5s ease-in-out 2 alternate;transform-origin:232px 166px}
+.pic g.siren.jiggle{animation:flash .3s steps(2) 4}
+.pic g.bed.jiggle{animation:tip .5s ease-in-out 2 alternate;transform-origin:56px 240px}
+.pic g.arm.jiggle{animation:dig .4s ease-in-out 2 alternate;transform-origin:254px 192px}
+.pic g.bucket.jiggle{animation:curl .35s ease-in-out 2 alternate;transform-origin:360px 202px}
+.alive .police,.alive .tractor{animation:drive 1.8s ease-in-out infinite}
+.alive .plane{animation:fly 2.6s ease-in-out infinite}
+.alive .cloud{animation:drift 3s ease-in-out infinite alternate}
+.alive .boat,.alive .duck{animation:bob 2s ease-in-out infinite;transform-origin:200px 260px}
+.alive .flag{animation:wave .4s ease-in-out infinite alternate;transform-origin:190px 148px}
+.alive .heli{animation:float 2s ease-in-out infinite}
+.alive .rotor{animation:rscale .16s linear infinite alternate;transform-origin:190px 145px}
+.pic g.trotor{transform-box:fill-box;transform-origin:center}
+.alive .trotor{animation:spin .3s linear infinite}
+.alive .rocket{animation:launch 1.6s ease-in-out infinite}
+.alive .flame{animation:flicker .14s ease-in-out infinite alternate;transform-origin:200px 282px}
+.alive .bunny{animation:hop 1s ease-in-out infinite}
+.alive .ears{animation:tilt 1.2s ease-in-out infinite;transform-origin:200px 140px}
+.alive .dwing{animation:flapw .3s ease-in-out infinite alternate;transform-origin:155px 252px}
+@keyframes fly{0%,100%{transform:translate(-12px,8px) rotate(-3deg)}50%{transform:translate(12px,-12px) rotate(3deg)}}
+@keyframes drift{to{transform:translateX(-30px)}}
+@keyframes wave{to{transform:skewY(12deg) scaleX(.85)}}
+@keyframes rscale{to{transform:scaleX(.12)}}
+@keyframes launch{0%,100%{transform:translateY(10px)}50%{transform:translateY(-20px)}}
+@keyframes flicker{to{transform:scaleY(1.35) scaleX(.85)}}
+@keyframes flapw{to{transform:rotate(-25deg)}}
+.pic g.flag.jiggle{animation:wave .2s ease-in-out 4 alternate;transform-origin:190px 148px}
+.pic g.rotor.jiggle{animation:rscale .12s linear 6 alternate;transform-origin:190px 145px}
+.pic g.trotor.jiggle{animation:spin .4s linear 2}
+.pic g.flame.jiggle{animation:flicker .12s ease-in-out 6 alternate;transform-origin:200px 282px}
+.pic g.ears.jiggle{animation:tilt .6s ease-in-out;transform-origin:200px 140px}
+.pic g.dwing.jiggle{animation:flapw .18s ease-in-out 4 alternate;transform-origin:155px 252px}
+/* 길게 누르는 버튼: 크롬 기본 메뉴가 끼어들지 않게 */
+.tool,#picName{touch-action:none;-webkit-touch-callout:none}
+.toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:3;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:18px;white-space:nowrap;animation:rise .25s ease-out}
+.pick:active{transform:scale(.97)}
 /* 칠하는 순간: 그 부분만 한 번 움직임 (몸통 등은 그림 전체가 깡총) */
 .pic g.jiggle{animation:hop .45s ease-out}
 .pic g.fish-tail.jiggle{animation:wag .18s ease-in-out 4 alternate;transform-origin:112px 200px}
@@ -252,6 +303,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
     <div class="board" id="board">
       <svg id="guide" viewBox="0 0 400 400" hidden></svg>
       <canvas id="paper" hidden></canvas>
+      <div class="toast" id="toast" hidden></div>
       <div class="done" id="done" hidden>다 칠했어요! <button id="next" type="button">다음 그림 ▶</button></div>
     </div>
   </main>
@@ -327,7 +379,7 @@ const PICS=[
    <g class="r" data-id="bBody"><ellipse cx="200" cy="218" rx="14" ry="62"/><circle cx="200" cy="146" r="18"/></g>
    <circle class="fx dot" cx="194" cy="143" r="3.5"/><circle class="fx dot" cx="206" cy="143" r="3.5"/>
   </g></svg>`},
- {id:'car',name:'자동차',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="car">
+ {id:'car',name:'자동차',cheer:'빵빵!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="car">
    <path class="r" data-id="cabin" d="M112 188 L146 126 Q151 118 161 118 L259 118 Q269 118 275 126 L306 188 Z"/>
    <path class="r" data-id="carBody" d="M48 248 L48 210 Q52 192 80 188 L330 188 Q356 192 362 216 L362 248 Q362 264 346 264 L64 264 Q48 264 48 248 Z"/>
    <path class="r" data-id="winBack" d="M138 180 L162 134 L201 134 L201 180 Z"/>
@@ -368,7 +420,7 @@ const PICS=[
    <g class="dino-neck"><path class="r" data-id="dNeck" d="M214 226 Q250 200 255 132 Q258 92 290 88 Q332 86 336 112 Q338 134 312 137 Q286 141 283 162 Q279 222 246 272 Z"/>
     <circle class="fx dot" cx="309" cy="106" r="6.5"/><path class="fx line" style="stroke-width:4" d="M316 124 Q327 125 333 118"/></g>
   </g><path class="fx line" d="M40 356 L360 356"/></svg>`},
- {id:'train',name:'기차',svg:`<svg viewBox="0 0 400 400" class="pic">
+ {id:'train',name:'기차',cheer:'칙칙폭폭!',svg:`<svg viewBox="0 0 400 400" class="pic">
   <g class="fx"><circle class="smoke white" cx="105" cy="118" r="14"/><circle class="smoke white" cx="96" cy="96" r="18"/><circle class="smoke white" cx="84" cy="70" r="22"/></g>
   <g class="train">
    <path class="r" data-id="tChim" d="M90 202 L90 162 L80 140 L130 140 L120 162 L120 202 Z"/>
@@ -387,7 +439,123 @@ const PICS=[
    <path class="r" data-id="wBelly" d="M74 262 Q150 302 290 280 Q240 316 150 312 Q92 304 74 262 Z"/>
    <path class="r" data-id="wFin" d="M172 274 Q180 326 224 324 Q218 292 204 276 Z"/>
    <circle class="fx dot" cx="110" cy="214" r="8"/><path class="fx line" style="stroke-width:4" d="M70 244 Q92 256 118 250"/>
-  </g></svg>`}
+  </g></svg>`},
+ {id:'bus',name:'버스',cheer:'빵빵! 출발!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="bus">
+   <path class="r" data-id="busBody" d="M40 150 Q40 120 70 120 L330 120 Q360 120 362 150 L366 270 Q366 282 354 282 L52 282 Q40 282 40 270 Z"/>
+   <path class="r" data-id="busStripe" d="M41 214 L364 214 L365 240 L41 240 Z"/>
+   <g class="r" data-id="busWin"><rect x="62" y="140" width="50" height="56" rx="8"/><rect x="122" y="140" width="50" height="56" rx="8"/><rect x="182" y="140" width="50" height="56" rx="8"/></g>
+   <g class="door"><path class="r" data-id="busDoor" d="M246 140 L284 140 L284 272 L246 272 Z"/><path class="fx line" style="stroke-width:4" d="M265 146 L265 266"/></g>
+   <path class="r" data-id="busFront" d="M298 140 L338 140 Q352 140 354 156 L356 202 L298 202 Z"/>
+   <circle class="r" data-id="busLight" cx="352" cy="256" r="9"/>
+   <g class="wheel"><circle class="r" data-id="bW1" cx="106" cy="284" r="32"/><circle class="fx white" cx="106" cy="284" r="11"/><path class="fx line" d="M106 258 L106 273"/></g>
+   <g class="wheel"><circle class="r" data-id="bW2" cx="300" cy="284" r="32"/><circle class="fx white" cx="300" cy="284" r="11"/><path class="fx line" d="M300 258 L300 273"/></g>
+  </g><path class="fx line" d="M20 320 L380 320"/></svg>`},
+ {id:'fire',name:'소방차',cheer:'삐뽀삐뽀!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="firetruck">
+   <g class="ladder"><path class="r" data-id="ftLadder" d="M48 146 L240 146 L240 170 L48 170 Z"/><path class="fx line" style="stroke-width:4" d="M78 148 L78 168 M108 148 L108 168 M138 148 L138 168 M168 148 L168 168 M198 148 L198 168 M226 148 L226 168"/></g>
+   <path class="fx line" d="M80 170 L80 184 M228 170 L228 184"/>
+   <path class="r" data-id="ftBody" d="M40 182 L252 182 L252 280 L40 280 Z"/>
+   <g class="r" data-id="ftBox"><rect x="60" y="202" width="80" height="58" rx="6"/><rect x="152" y="202" width="80" height="58" rx="6"/></g>
+   <g class="siren"><path class="r" data-id="ftSiren" d="M280 120 L306 120 L311 140 L275 140 Z"/></g>
+   <path class="r" data-id="ftCab" d="M250 140 L322 140 Q334 140 340 152 L362 210 L362 280 L250 280 Z"/>
+   <path class="r" data-id="ftWin" d="M266 156 L318 156 L338 206 L266 206 Z"/>
+   <g class="wheel"><circle class="r" data-id="fW1" cx="100" cy="282" r="32"/><circle class="fx white" cx="100" cy="282" r="11"/><path class="fx line" d="M100 256 L100 271"/></g>
+   <g class="wheel"><circle class="r" data-id="fW2" cx="304" cy="282" r="32"/><circle class="fx white" cx="304" cy="282" r="11"/><path class="fx line" d="M304 256 L304 271"/></g>
+  </g><path class="fx line" d="M20 318 L380 318"/></svg>`},
+ {id:'dump',name:'덤프트럭',cheer:'부릉부릉!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="dump">
+   <g class="bed"><path class="r" data-id="dkDirt" d="M62 142 Q90 104 124 130 Q156 98 190 128 Q212 112 226 142 Z"/><path class="r" data-id="dkBed" d="M40 140 L232 140 L216 240 L56 240 Z"/></g>
+   <path class="r" data-id="dkChassis" d="M40 240 L362 240 L362 262 L40 262 Z"/>
+   <path class="r" data-id="dkCab" d="M248 150 L318 150 Q330 150 336 162 L362 214 L362 240 L248 240 Z"/>
+   <path class="r" data-id="dkWin" d="M262 166 L314 166 L334 210 L262 210 Z"/>
+   <g class="wheel"><circle class="r" data-id="kW1" cx="104" cy="274" r="30"/><circle class="fx white" cx="104" cy="274" r="10"/><path class="fx line" d="M104 250 L104 264"/></g>
+   <g class="wheel"><circle class="r" data-id="kW2" cx="304" cy="274" r="30"/><circle class="fx white" cx="304" cy="274" r="10"/><path class="fx line" d="M304 250 L304 264"/></g>
+  </g><path class="fx line" d="M20 306 L380 306"/></svg>`},
+ {id:'digger',name:'포크레인',cheer:'영차영차!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="excavator">
+   <g class="arm">
+    <path class="r" data-id="exBoom" d="M244 182 L330 92 L350 108 L262 200 Z"/>
+    <path class="r" data-id="exStick" d="M330 96 L350 104 L372 200 L352 206 Z"/>
+    <g class="bucket"><path class="r" data-id="exBucket" d="M350 198 L394 204 L386 240 Q364 252 344 228 Z"/></g>
+   </g>
+   <path class="r" data-id="exTrack" d="M44 274 Q44 250 68 250 L252 250 Q276 250 276 274 Q276 298 252 298 L68 298 Q44 298 44 274 Z"/>
+   <g class="fx"><circle class="white" cx="76" cy="274" r="12"/><circle class="white" cx="124" cy="274" r="12"/><circle class="white" cx="172" cy="274" r="12"/><circle class="white" cx="220" cy="274" r="12"/></g>
+   <path class="r" data-id="exBody" d="M66 250 L66 182 L256 182 L256 250 Z"/>
+   <path class="r" data-id="exCab" d="M146 182 L146 108 L226 108 L252 142 L252 182 Z"/>
+   <path class="r" data-id="exWin" d="M160 122 L220 122 L238 148 L238 170 L160 170 Z"/>
+  </g><path class="fx line" d="M20 304 L380 304"/></svg>`},
+ {id:'police',name:'경찰차',cheer:'삐뽀삐뽀!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="police">
+   <g class="siren"><path class="r" data-id="pcSL" d="M176 100 L204 100 L204 118 L176 118 Z"/><path class="r" data-id="pcSR" d="M208 100 L236 100 L236 118 L208 118 Z"/></g>
+   <path class="r" data-id="pcCabin" d="M112 188 L146 126 Q151 118 161 118 L259 118 Q269 118 275 126 L306 188 Z"/>
+   <path class="r" data-id="pcBody" d="M48 248 L48 210 Q52 192 80 188 L330 188 Q356 192 362 216 L362 248 Q362 264 346 264 L64 264 Q48 264 48 248 Z"/>
+   <path class="r" data-id="pcStripe" d="M49 214 L361 214 L362 236 L49 236 Z"/>
+   <path class="r" data-id="pcWinB" d="M138 180 L162 134 L201 134 L201 180 Z"/>
+   <path class="r" data-id="pcWinF" d="M213 180 L213 134 L257 134 L284 180 Z"/>
+   <path class="fx line" d="M207 194 L207 256"/>
+   <g class="wheel"><circle class="r" data-id="pcW1" cx="122" cy="264" r="34"/><circle class="fx white" cx="122" cy="264" r="12"/><path class="fx line" d="M122 237 L122 252"/></g>
+   <g class="wheel"><circle class="r" data-id="pcW2" cx="290" cy="264" r="34"/><circle class="fx white" cx="290" cy="264" r="12"/><path class="fx line" d="M290 237 L290 252"/></g>
+  </g><path class="fx line" d="M24 304 L376 304"/></svg>`},
+ {id:'tractor',name:'트랙터',cheer:'털털털!',svg:`<svg viewBox="0 0 400 400" class="pic">
+  <g class="fx"><circle class="smoke white" cx="300" cy="152" r="10"/><circle class="smoke white" cx="292" cy="130" r="13"/><circle class="smoke white" cx="282" cy="104" r="16"/></g>
+  <g class="tractor">
+   <path class="r" data-id="trCab" d="M104 118 L204 118 L204 232 L104 232 Z"/>
+   <path class="r" data-id="trHood" d="M196 214 L342 214 Q352 214 352 226 L352 272 L196 272 Z"/>
+   <path class="r" data-id="trPipe" d="M290 214 L290 166 L306 166 L306 214 Z"/>
+   <path class="r" data-id="trWin" d="M122 134 L186 134 L186 190 L122 190 Z"/>
+   <g class="wheel"><circle class="r" data-id="trW1" cx="128" cy="266" r="62"/><circle class="fx white" cx="128" cy="266" r="20"/><path class="fx line" d="M128 210 L128 246"/></g>
+   <g class="wheel"><circle class="r" data-id="trW2" cx="306" cy="292" r="34"/><circle class="fx white" cx="306" cy="292" r="11"/><path class="fx line" d="M306 264 L306 281"/></g>
+  </g><path class="fx line" d="M20 330 L380 330"/></svg>`},
+ {id:'plane',name:'비행기',cheer:'슝~!',svg:`<svg viewBox="0 0 400 400" class="pic">
+  <g class="fx cloud"><path class="white" d="M40 100 Q40 76 66 78 Q76 56 102 66 Q126 60 128 86 Q146 92 136 110 L50 110 Q36 110 40 100 Z"/><path class="white" d="M270 330 Q270 310 292 312 Q302 294 324 302 Q346 298 346 320 Q360 326 352 340 L280 340 Q266 340 270 330 Z"/></g>
+  <g class="plane">
+   <path class="r" data-id="pTail" d="M62 188 L50 110 L84 110 L122 184 Z"/>
+   <path class="r" data-id="pBody" d="M48 210 Q48 182 90 180 L306 176 Q358 178 372 206 Q358 234 306 236 L90 234 Q48 234 48 210 Z"/>
+   <path class="r" data-id="pWing" d="M168 212 L254 212 L212 304 L178 304 Z"/>
+   <g class="r" data-id="pWin"><circle cx="140" cy="200" r="10"/><circle cx="176" cy="200" r="10"/><circle cx="212" cy="200" r="10"/><circle cx="248" cy="200" r="10"/></g>
+   <path class="r" data-id="pCock" d="M314 182 Q350 186 362 206 L314 206 Z"/>
+  </g></svg>`},
+ {id:'heli',name:'헬리콥터',cheer:'두두두두!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="heli">
+   <path class="r" data-id="hTailB" d="M104 204 L34 194 L34 216 L104 236 Z"/>
+   <g class="trotor"><ellipse class="r" data-id="hTailR" cx="34" cy="204" rx="9" ry="28"/></g>
+   <path class="fx line" d="M190 150 L190 164 M140 276 L130 296 M240 276 L250 296 M100 296 L290 296"/>
+   <ellipse class="r" data-id="hBody" cx="192" cy="222" rx="96" ry="60"/>
+   <path class="r" data-id="hWin" d="M204 168 Q272 172 284 220 L204 220 Z"/>
+   <g class="rotor"><path class="r" data-id="hRotor" d="M56 138 L324 138 Q332 144 324 152 L56 152 Q48 144 56 138 Z"/></g>
+  </g></svg>`},
+ {id:'boat',name:'배',cheer:'뿌우~!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="boat">
+   <path class="fx line" d="M190 200 L190 132"/>
+   <g class="flag"><path class="r" data-id="sFlag" d="M190 132 L238 148 L190 164 Z"/></g>
+   <path class="r" data-id="sChim" d="M272 250 L272 172 L302 172 L302 250 Z"/>
+   <path class="r" data-id="sCabin" d="M116 250 L116 198 L262 198 L262 250 Z"/>
+   <g class="r" data-id="sWin"><circle cx="148" cy="224" r="12"/><circle cx="189" cy="224" r="12"/><circle cx="230" cy="224" r="12"/></g>
+   <path class="r" data-id="sHull" d="M46 248 L354 248 L314 312 L86 312 Z"/>
+  </g>
+  <path class="r" data-id="sWater" d="M0 300 Q40 284 80 300 T160 300 T240 300 T320 300 T400 300 L400 380 L0 380 Z"/></svg>`},
+ {id:'rocket',name:'로켓',cheer:'발사! 슝!',svg:`<svg viewBox="0 0 400 400" class="pic">
+  <g class="fx"><path class="dot" d="M70 90 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5z"/><path class="dot" d="M320 70 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z"/><path class="dot" d="M330 260 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z"/><circle class="dot" cx="90" cy="250" r="5"/></g>
+  <g class="rocket">
+   <g class="flame"><path class="r" data-id="rFlame" d="M166 280 Q200 368 234 280 Z"/></g>
+   <g class="r" data-id="rFins"><path d="M152 222 L104 292 L152 282 Z"/><path d="M248 222 L296 292 L248 282 Z"/></g>
+   <path class="r" data-id="rBody" d="M200 54 Q252 108 252 200 L252 282 L148 282 L148 200 Q148 108 200 54 Z"/>
+   <path class="r" data-id="rNose" d="M200 54 Q228 82 238 116 L162 116 Q172 82 200 54 Z"/>
+   <circle class="r" data-id="rWin" cx="200" cy="180" r="27"/>
+  </g></svg>`},
+ {id:'rabbit',name:'토끼',cheer:'깡총깡총!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="bunny">
+   <ellipse class="r" data-id="rbBody" cx="200" cy="294" rx="82" ry="70"/>
+   <ellipse class="r" data-id="rbBelly" cx="200" cy="306" rx="42" ry="46"/>
+   <g class="r" data-id="rbFeet"><ellipse cx="160" cy="360" rx="28" ry="14"/><ellipse cx="240" cy="360" rx="28" ry="14"/></g>
+   <g class="ears"><path class="r" data-id="rbEarL" d="M166 140 Q138 40 170 28 Q200 38 190 140 Z"/><path class="r" data-id="rbEarR" d="M234 140 Q262 40 230 28 Q200 38 210 140 Z"/></g>
+   <circle class="r" data-id="rbHead" cx="200" cy="172" r="62"/>
+   <circle class="fx dot" cx="178" cy="164" r="8"/><circle class="fx dot" cx="222" cy="164" r="8"/>
+   <ellipse class="fx dot" cx="200" cy="186" rx="8" ry="6"/>
+   <path class="fx line" style="stroke-width:4" d="M200 192 Q192 204 182 198 M200 192 Q208 204 218 198 M156 186 L120 180 M156 196 L122 202 M244 186 L280 180 M244 196 L278 202"/>
+  </g></svg>`},
+ {id:'duck',name:'오리',cheer:'꽥꽥!',svg:`<svg viewBox="0 0 400 400" class="pic"><g class="duck">
+   <path class="r" data-id="duTail" d="M90 258 L44 224 L104 238 Z"/>
+   <ellipse class="r" data-id="duBody" cx="196" cy="264" rx="118" ry="52"/>
+   <g class="dwing"><path class="r" data-id="duWing" d="M150 254 Q200 214 258 248 Q216 292 150 254 Z"/></g>
+   <circle class="r" data-id="duHead" cx="282" cy="180" r="48"/>
+   <path class="r" data-id="duBeak" d="M322 172 L370 186 L322 200 Z"/>
+   <circle class="fx dot" cx="294" cy="168" r="7"/>
+  </g>
+  <path class="r" data-id="duWater" d="M0 300 Q40 284 80 300 T160 300 T240 300 T320 300 T400 300 L400 380 L0 380 Z"/></svg>`}
 ];
 
 COLORS.push({name:'연분홍',hex:'#FFC6DC'},{name:'연노랑',hex:'#FFF0A6'},{name:'연두색',hex:'#B8E986'},{name:'연하늘',hex:'#BFE6FA'},{name:'연보라',hex:'#D3C0F5'});
@@ -406,12 +574,26 @@ const GROUPS={
   cat:[['cHead','cEarL','cEarR'],['cBody','cBelly','cPaws'],['cTail']],
   dino:[['dBody','dNeck','dTail'],['dLeg1','dLeg2'],['dSpikes']],
   train:[['tBoiler','tChim'],['tCab','tRoof','tWin'],['tW1','tW2','tW3']],
-  whale:[['wBody','wTail','wFin'],['wBelly'],['wWater']]
+  whale:[['wBody','wTail','wFin'],['wBelly'],['wWater']],
+  bus:[['busBody','busStripe'],['busWin','busDoor','busFront','busLight'],['bW1','bW2']],
+  fire:[['ftBody','ftBox','ftCab'],['ftLadder','ftWin','ftSiren'],['fW1','fW2']],
+  dump:[['dkBed','dkDirt'],['dkCab','dkWin','dkChassis'],['kW1','kW2']],
+  digger:[['exTrack'],['exBody','exCab','exWin'],['exBoom','exStick','exBucket']],
+  police:[['pcBody','pcCabin','pcStripe'],['pcWinB','pcWinF','pcSL','pcSR'],['pcW1','pcW2']],
+  tractor:[['trCab','trHood','trPipe'],['trWin'],['trW1','trW2']],
+  plane:[['pBody','pCock'],['pWing','pTail'],['pWin']],
+  heli:[['hBody','hTailB'],['hWin','hTailR'],['hRotor']],
+  boat:[['sHull','sChim'],['sCabin','sWin','sFlag'],['sWater']],
+  rocket:[['rBody','rNose'],['rWin','rFins'],['rFlame']],
+  rabbit:[['rbHead','rbEarL','rbEarR'],['rbBody','rbFeet'],['rbBelly']],
+  duck:[['duBody','duTail','duWing'],['duHead','duBeak'],['duWater']]
 };
+{const ORDER=['car','train','bus','fire','police','dump','digger','tractor','plane','heli','boat','rocket','fish','butterfly','flower','cat','dino','whale','rabbit','duck'];PICS.sort((a,b)=>ORDER.indexOf(a.id)-ORDER.indexOf(b.id))}
 const KEY='colorplay.v1',DKEY='colorplay.draw';
 let S={pic:0,color:0,eraser:false,sound:true,fills:{},mode:'color',size:1,rainbow:false,level:1,stars:0,guide:0};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'));S.eraser=false}catch(e){}
 if(S.pic>=PICS.length)S.pic=0;
+if(S.audio===undefined)S.audio=S.sound===false?0:2;
 const stacks={};
 const save=()=>{try{const{eraser,...k}=S;localStorage.setItem(KEY,JSON.stringify(k))}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -421,7 +603,7 @@ let svg=null,regions=[],uid=0,mission=null;
 /* 소리 */
 let ac=null;
 function tone(f,dur=.13,when=0,vol=.16){
-  if(!S.sound)return;
+  if(!(S.audio>0))return;
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
     const t=ac.currentTime+when,o=ac.createOscillator(),g=ac.createGain();
     o.type='sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*1.4,t+dur);
@@ -429,9 +611,53 @@ function tone(f,dur=.13,when=0,vol=.16){
     o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+.03)}catch(e){}
 }
 function speak(text){
-  if(!S.sound)return;
+  if(!(S.audio>0))return;
   try{const u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=.95;u.pitch=1.2;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
 }
+
+/* 배경음악: 작은 별 · 나비야(Hänschen klein) · 떴다 떴다 비행기(Mary had a little lamb) · 런던 다리 — 모두 19세기 이전 민요 멜로디 */
+const SONGS=[
+ 'C5 C5 G5 G5 A5 A5 G5:2 F5 F5 E5 E5 D5 D5 C5:2 G5 G5 F5 F5 E5 E5 D5:2 G5 G5 F5 F5 E5 E5 D5:2 C5 C5 G5 G5 A5 A5 G5:2 F5 F5 E5 E5 D5 D5 C5:2',
+ 'G5 E5 E5:2 F5 D5 D5:2 C5 D5 E5 F5 G5 G5 G5:2 G5 E5 E5:2 F5 D5 D5:2 C5 E5 G5 G5 E5:4 D5 D5 D5 D5 D5 E5 F5:2 E5 E5 E5 E5 E5 F5 G5:2 G5 E5 E5:2 F5 D5 D5:2 C5 E5 G5 G5 C5:4',
+ 'E5 D5 C5 D5 E5 E5 E5:2 D5 D5 D5:2 E5 G5 G5:2 E5 D5 C5 D5 E5 E5 E5 E5 D5 D5 E5 D5 C5:4',
+ 'G5:1.5 A5:0.5 G5 F5 E5 F5 G5:2 D5 E5 F5:2 E5 F5 G5:2 G5:1.5 A5:0.5 G5 F5 E5 F5 G5:2 D5:2 G5:2 E5 C5:3'
+].map(t=>t.split(' ').map(x=>{const[n,d]=x.split(':');return[n,+(d||1)]}));
+const NOTE={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const hz=n=>440*Math.pow(2,(NOTE[n[0]]+12*(+n[1]+1)-69)/12);
+const BEAT=.42;let mus={timer:null,song:0,idx:0,t:0,gain:null};
+function musicTick(){
+  if(!ac)return;
+  while(mus.t<ac.currentTime+.25){
+    const song=SONGS[mus.song];
+    if(mus.idx>=song.length){mus.song=(mus.song+1)%SONGS.length;mus.idx=0;mus.t+=BEAT*3;continue}
+    const[n,d]=song[mus.idx++];const dur=d*BEAT;
+    if(n!=='R'){const f=hz(n);[[f,'sine',1],[f*2,'sine',.25],[f/2,'triangle',.35]].forEach(([fr,ty,v])=>{
+      const o=ac.createOscillator(),g=ac.createGain();o.type=ty;o.frequency.value=fr;
+      g.gain.setValueAtTime(0,mus.t);g.gain.linearRampToValueAtTime(v,mus.t+.01);g.gain.exponentialRampToValueAtTime(.001,mus.t+Math.max(dur,.4)*1.6);
+      o.connect(g).connect(mus.gain);o.start(mus.t);o.stop(mus.t+Math.max(dur,.4)*1.7)})}
+    mus.t+=dur;
+  }
+}
+function musicOn(){
+  if(S.audio!==2||mus.timer||document.hidden)return;
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
+    mus.gain=mus.gain||(()=>{const g=ac.createGain();g.gain.value=.05;g.connect(ac.destination);return g})();
+    mus.t=ac.currentTime+.1;mus.timer=setInterval(musicTick,80);musicTick()}catch(e){}
+}
+function musicOff(){if(mus.timer){clearInterval(mus.timer);mus.timer=null}
+  if(mus.gain){try{mus.gain.disconnect()}catch(e){}mus.gain=null}}
+addEventListener('pointerdown',()=>{if(S.audio===2)musicOn()},{capture:true});
+document.addEventListener('visibilitychange',()=>{document.hidden?musicOff():musicOn()});
+
+/* 탈것 효과음 */
+function horn(){[0,.28].forEach(w=>{tone(392,.18,w,.14);tone(494,.18,w,.1)})}
+function siren(){for(let i=0;i<4;i++){tone(740,.22,i*.5,.12);tone(587,.22,i*.5+.25,.12)}}
+function whistle(){tone(880,.5,0,.12);tone(1046,.5,0,.08)}
+const VSFX={car:horn,bus:horn,dump:horn,digger:horn,tractor:horn,fire:siren,police:siren,train:whistle,boat:()=>{tone(147,.9,0,.18);tone(196,.9,0,.1)},rocket:()=>{tone(160,1,0,.16);tone(220,1,.15,.1)},duck:()=>{tone(620,.1,0,.14);tone(620,.1,.18,.14)}};
+
+/* 안내 말풍선 */
+let toastT=null;
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 
 /* 반짝이·색종이 */
 const cv=$('fx'),cx=cv.getContext('2d');let parts=[],running=false;
@@ -504,7 +730,7 @@ function update(celebrate){
   const was=svg.classList.contains('alive');
   svg.classList.toggle('alive',complete);done.hidden=!complete;
   if(complete){mission=null;regions.forEach(r=>r.classList.remove('target'));$('mission').hidden=true}
-  if(complete&&!was&&celebrate){confetti();speak('우와! '+p.name+' 다 칠했어요!');[523,659,784,1047].forEach((n,i)=>tone(n,.18,i*.12,.2));return true}
+  if(complete&&!was&&celebrate){confetti();speak('우와! '+p.name+' 다 칠했어요! '+(p.cheer||''));[523,659,784,1047].forEach((n,i)=>tone(n,.18,i*.12,.2));if(VSFX[p.id])setTimeout(VSFX[p.id],700);return true}
   return false;
 }
 
@@ -519,7 +745,7 @@ function newMission(prefix){
   speak(prefix+'반짝이는 곳을 '+COLORS[ci].name+'으로 칠해볼까?');
 }
 
-const PARTS=['fish-tail','wingL','wingR','wheel','cat-tail','cat-head','dino-tail','dino-neck','whale-tail','spout','head'].map(c=>'g.'+c).join(',');
+const PARTS=['fish-tail','wingL','wingR','wheel','cat-tail','cat-head','dino-tail','dino-neck','whale-tail','spout','head','door','ladder','siren','bed','arm','bucket','flag','rotor','trotor','flame','ears','dwing'].map(c=>'g.'+c).join(',');
 function jiggle(ids){
   if(reduce)return;
   const set=new Set();
@@ -535,6 +761,8 @@ function fillUnit(ids,next,x,y){
     const el=svg.querySelector(`[data-id="${id}"]`);el.style.fill=next||'';el.classList.remove('pop');void el.getBoundingClientRect();el.classList.add('pop')});
   burst(x,y,next||'#C9D3DE',S.level===0?24:14);
   if(next)jiggle(ids);
+  if(next&&ids.some(i=>i==='ftSiren'||i==='pcSL'||i==='pcSR'))siren();
+  if(next&&ids.some(i=>/^(busLight)$/.test(i)))horn();
   tone(S.eraser?300:500+(S.color%10)*35);
   save();
   const hitMission=mission&&ids.includes(mission.id);
@@ -628,14 +856,18 @@ function syncTools(){
   const draw=S.mode==='draw';
   [...pal.children].forEach(b=>b.setAttribute('aria-pressed',String(!S.eraser&&!(draw&&S.rainbow)&&+b.dataset.i===S.color)));
   $('tErase').classList.toggle('on',S.eraser);$('tErase').setAttribute('aria-pressed',String(S.eraser));
-  $('tSound').setAttribute('aria-pressed',String(S.sound));
-  $('soundIcon').innerHTML=S.sound?'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>':'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/>';
+  $('tSound').setAttribute('aria-pressed',String(S.audio>0));
+  $('soundIcon').innerHTML=S.audio===2?'<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>':S.audio===1?'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>':'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/>';
+  $('tSound').querySelector('span').textContent=['끔','소리','음악'][S.audio];
   $('brush').style.setProperty('--cur',COLORS[S.color].hex);
   document.querySelectorAll('.bsz[data-s]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===S.size)));
   $('rainbow').setAttribute('aria-pressed',String(S.rainbow));
 }
 $('tErase').addEventListener('click',()=>{S.eraser=!S.eraser;syncTools();if(S.eraser)speak('지우개');tone(300)});
-$('tSound').addEventListener('click',()=>{S.sound=!S.sound;if(!S.sound)try{speechSynthesis.cancel()}catch(e){};syncTools();tone(600);save()});
+$('tSound').addEventListener('click',()=>{S.audio=(S.audio+2)%3;
+  if(S.audio!==2)musicOff();if(S.audio===0)try{speechSynthesis.cancel()}catch(e){}
+  syncTools();save();tone(600);
+  if(S.audio===2){musicOn();toast('음악 + 소리')}else if(S.audio===1){speak('소리만');toast('소리만 (음악 끔)')}else toast('조용히 (소리 끔)')});
 $('tUndo').addEventListener('click',()=>{
   if(S.mode==='draw'){if(!strokes.length){tone(250,.1);return}strokes.pop();redraw();saveDraw();tone(380,.1);return}
   const p=PICS[S.pic],last=stacks[p.id].pop();if(!last){tone(250,.1);return}
@@ -644,31 +876,42 @@ $('tUndo').addEventListener('click',()=>{
   tone(380,.1);save();update(false);
   if(S.level===2&&!mission)newMission('');
 });
-const rb=$('tReset');let holdT=null;
-const endHold=()=>{clearTimeout(holdT);rb.classList.remove('holding')};
-rb.addEventListener('pointerdown',()=>{rb.classList.add('holding');holdT=setTimeout(()=>{
-  endHold();tone(220,.25);
-  if(S.mode==='draw'){strokes=[];redraw();saveDraw();speak('새 종이예요');return}
+function holdButton(el,ms,onDone,onShort){
+  let t=null;
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+  el.addEventListener('pointerdown',e=>{e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}
+    el.classList.add('holding');clearTimeout(t);t=setTimeout(()=>{t=null;el.classList.remove('holding');onDone()},ms)});
+  el.addEventListener('pointerup',()=>{if(t){clearTimeout(t);t=null;el.classList.remove('holding');onShort&&onShort()}});
+}
+const rb=$('tReset');
+holdButton(rb,900,()=>{
+  tone(220,.25);
+  if(S.mode==='draw'){strokes=[];redraw();saveDraw();speak('새 종이예요');toast('새 종이!');return}
   const p=PICS[S.pic];S.fills[p.id]={};stacks[p.id]=[];paint(svg,{});update(false);save();
   if(S.level===2)newMission('처음부터 다시! ');else speak('처음부터 다시 칠해요');
-},900)});
-['pointerup','pointerleave','pointercancel'].forEach(t=>rb.addEventListener(t,endHold));
+  toast('처음부터 다시!');
+},()=>{toast('꾹 누르고 있으면 지워져요');tone(300,.1)});
 
 /* 그림 고르기 */
 const picker=$('picker');
 const DRAW_THUMB=`<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F4F9FC"/><path d="M70 270 Q120 120 170 230 T270 200 T340 120" fill="none" stroke="#F2545B" stroke-width="22" stroke-linecap="round"/><path d="M70 320 Q160 260 230 310 T340 280" fill="none" stroke="#3D7BE0" stroke-width="22" stroke-linecap="round"/><circle cx="110" cy="110" r="34" fill="#FFD93D"/><path d="M250 90 L300 60 L320 110 Z" fill="#5BC27A"/></svg>`;
+function onTap(el,fn){let x=0,y=0,last=0;
+  el.addEventListener('pointerdown',e=>{x=e.clientX;y=e.clientY});
+  el.addEventListener('pointerup',e=>{if(Math.hypot(e.clientX-x,e.clientY-y)<16){last=Date.now();fn()}});
+  el.addEventListener('click',()=>{if(Date.now()-last>600)fn()});
+}
 function openPicker(){
   const box=$('picks');box.innerHTML='';
   const d=document.createElement('button');d.type='button';d.className='pick';
   d.setAttribute('aria-current',String(S.mode==='draw'));
   d.innerHTML=DRAW_THUMB+'<span>자유 그리기</span>';
-  d.addEventListener('click',()=>{S.mode='draw';S.eraser=false;save();picker.hidden=true;render();speak('자유 그리기');tone(520)});
+  onTap(d,()=>{S.mode='draw';S.eraser=false;save();picker.hidden=true;render();speak('자유 그리기');tone(520)});
   box.appendChild(d);
   PICS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='pick';
     b.setAttribute('aria-current',String(S.mode==='color'&&i===S.pic));
     b.innerHTML=makeSvg(p)+`<span>${p.name}</span>`+(isDone(p)?'<span class="badge">완성</span>':'');
     paint(b,S.fills[p.id]||{});
-    b.addEventListener('click',()=>{S.mode='color';S.pic=i;S.eraser=false;save();picker.hidden=true;render();if(S.level!==2)speak(p.name);tone(520)});
+    onTap(b,()=>{S.mode='color';S.pic=i;S.eraser=false;save();picker.hidden=true;render();if(S.level!==2)speak(p.name);tone(520)});
     box.appendChild(b)});
   picker.hidden=false;
 }
@@ -687,16 +930,12 @@ function openSettings(){
     box.appendChild(b)});
   settings.hidden=false;
 }
-let pressT=null;const title=$('picName');
-title.addEventListener('pointerdown',()=>{pressT=setTimeout(()=>{tone(700,.15);openSettings()},2000)});
-['pointerup','pointerleave','pointercancel'].forEach(t=>title.addEventListener(t,()=>clearTimeout(pressT)));
-title.addEventListener('contextmenu',e=>e.preventDefault());
+holdButton($('picName'),2000,()=>{tone(700,.15);openSettings()});
 $('sClose').addEventListener('click',()=>{settings.hidden=true});
 settings.addEventListener('click',e=>{if(e.target===settings)settings.hidden=true});
 
 buildPalette();render();
 </script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 (function(){
