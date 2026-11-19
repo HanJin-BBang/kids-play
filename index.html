@@ -248,7 +248,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .pic g.sun.jiggle{animation:bloom .3s ease-in-out 2 alternate;transform-origin:342px 58px}
 /* 놀이·그림책: 화면 틀은 그대로, 쓰지 않는 팔레트·도구만 흐리게 */
 .app.game .palette,.app.game #tUndo,.app.game #tErase{opacity:.3;pointer-events:none}
-#game{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;overflow:auto}
+#game{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;gap:16px;overflow:auto;overscroll-behavior:contain}
 .gstar{font-weight:400;font-size:22px;color:#E8950C;background:#fff;border-radius:999px;padding:4px 14px;box-shadow:0 3px 0 var(--tool-shadow);white-space:nowrap}
 .listen{display:flex;align-items:center;gap:10px;background:var(--accent);color:#fff;border-radius:999px;padding:12px 28px;font-size:clamp(20px,3.4vh,28px);box-shadow:0 5px 0 #D65A3D}
 .listen svg{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -378,6 +378,25 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .gauge{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:min(46%,320px);height:30px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 4px var(--ink);overflow:hidden}
 .gauge i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FFD93D,#5BC27A);transition:width .22s}
 .drive .carwrap.parked{transition:opacity .8s;opacity:.3}
+/* 옛 동화 · 탈것 영상 */
+.bcover.tale img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px;background:#F3EEE3;pointer-events:none}
+.credit{grid-column:1/-1;margin:10px 4px 0;font-size:13px;color:var(--muted);line-height:1.5;text-align:center}
+.tale-frame{height:100%;aspect-ratio:3/4;max-width:100%;overflow:hidden;border-radius:18px;background:#F3EEE3;box-shadow:0 0 0 4px var(--bg);display:grid;place-items:center;position:relative}
+.tale-img{width:100%;height:100%;object-fit:contain;transition:transform 1.4s ease-in-out,transform-origin 1.4s ease-in-out}
+.tale-off{font-size:18px;color:var(--muted);text-align:center;padding:16px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;width:100%;align-self:stretch;align-content:start}
+.vcard{background:#fff;border:5px solid var(--bg);border-radius:22px;padding:8px;display:grid;gap:6px;box-shadow:0 5px 0 var(--tool-shadow);font-size:clamp(17px,2.6vh,21px)}
+.vthumb{position:relative;display:block;aspect-ratio:16/10;border-radius:14px;overflow:hidden;background:#E8EEF2}
+.vthumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.vplay{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(43,45,66,.72)}
+.vplay::after{content:"";position:absolute;left:21px;top:16px;border-left:18px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent}
+.vthumb em{position:absolute;right:6px;bottom:6px;font-style:normal;font-size:13px;background:rgba(43,45,66,.75);color:#fff;border-radius:8px;padding:2px 7px}
+.vplayer{display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:10px;width:100%;height:100%}
+.vbox{min-height:0;display:grid;place-items:center;background:#11121C;border-radius:18px;overflow:hidden}
+.vbox video{width:100%;height:100%;object-fit:contain;background:#11121C}
+.vinfo{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;justify-content:center}
+.vinfo b{font-weight:400;font-size:clamp(22px,3.6vh,30px)}
+.vinfo small{font-size:13px;color:var(--muted)}
 /* 길게 누르는 버튼: 크롬 기본 메뉴가 끼어들지 않게 */
 .tool,#picName{touch-action:none;-webkit-touch-callout:none}
 .toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:3;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:18px;white-space:nowrap;animation:rise .25s ease-out}
@@ -483,7 +502,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
   <div class="picker-card" role="dialog" aria-label="나이 단계" style="width:min(620px,100%)">
     <div class="picker-head"><h2>나이 단계</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
     <div class="levels" id="levels"></div>
-    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 10</b></p>
+    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 11</b></p>
   </div>
 </div>
 <div class="picker" id="share" hidden>
@@ -899,7 +918,7 @@ function musicTick(){
   }
 }
 function musicOn(){
-  if(S.audio!==2||mus.timer||document.hidden)return;
+  if(S.audio!==2||mus.timer||document.hidden||(typeof videoPlaying!=='undefined'&&videoPlaying))return;
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
     mus.gain=mus.gain||(()=>{const g=ac.createGain();g.gain.value=.16;g.connect(ac.destination);return g})();
     mus.t=ac.currentTime+.1;mus.timer=setInterval(musicTick,80);musicTick()}catch(e){}
@@ -916,9 +935,9 @@ function whistle(){tone(880,.5,0,.12);tone(1046,.5,0,.08)}
 const VSFX={taxi:()=>horn(),garbage:()=>horn(),camper:()=>horn(),dozer:()=>horn(),roller:()=>horn(),tow:()=>siren(),ktx:()=>whistle(),subway:()=>{tone(660,.35,0,.14);tone(523,.45,.4,.14)},balloon:()=>{tone(120,.6,0,.12)},yacht:()=>{tone(147,.9,0,.18);tone(196,.9,0,.1)},trex:()=>roar(),trike:()=>roar(),lion:()=>roar(),elephant:()=>{tone(330,.5,0,.14);tone(440,.5,0,.1)},penguin:()=>{tone(700,.1,0,.12);tone(700,.1,.2,.12)},castle:()=>{[523,659,784,1047].forEach((n,i)=>tone(n,.2,i*.15,.16))},robot:()=>{tone(880,.08,0,.12);tone(660,.08,.12,.12);tone(990,.12,.24,.12)},icecream:()=>{tone(1046,.15,0,.12);tone(1318,.2,.15,.12)},house:()=>{tone(784,.25,0,.12);tone(659,.35,.3,.12)},ambulance:siren,mixer:horn,crane:horn,forklift:()=>{tone(1000,.12,0,.1);tone(1000,.12,.3,.1)},moto:()=>{for(let i=0;i<8;i++)tone(80+i*12,.1,i*.09,.2)},sub:()=>{for(let i=0;i<6;i++)tone(400+Math.random()*300,.06,i*.12,.1)},car:horn,bus:horn,dump:horn,digger:horn,tractor:horn,fire:siren,police:siren,train:whistle,boat:()=>{tone(147,.9,0,.18);tone(196,.9,0,.1)},rocket:()=>{tone(160,1,0,.16);tone(220,1,.15,.1)},duck:()=>{tone(620,.1,0,.14);tone(620,.1,.18,.14)}};
 
 /* 놀이 공통 */
-const GAME_MODES=['quiz','match','book','album','puzzle','shadow','spot','wash','garage','drive'];
-const GAME_TITLE={quiz:'소리 맞히기',match:'짝 맞추기',book:'그림책',album:'내 그림첩',puzzle:'조각 퍼즐',shadow:'그림자 찾기',spot:'다른 곳 찾기',wash:'세차장',garage:'정비소',drive:'운전하기'};
-const GAME_HINT={quiz:'소리를 듣고 그림을 콕!',match:'똑같은 그림 두 장을 찾아요',book:'책장을 넘겨요',album:'내가 칠한 그림이 모여 있어요',puzzle:'조각을 끌어서 맞춰요',shadow:'누구의 그림자일까?',spot:'두 그림에서 다른 곳을 콕!',wash:'문질러서 깨끗하게!',garage:'바퀴를 끼우고 기름을 넣어요',drive:'길을 따라 운전해요'};
+const GAME_MODES=['quiz','match','book','album','puzzle','shadow','spot','wash','garage','drive','videos'];
+const GAME_TITLE={quiz:'소리 맞히기',match:'짝 맞추기',book:'그림책',album:'내 그림첩',puzzle:'조각 퍼즐',shadow:'그림자 찾기',spot:'다른 곳 찾기',wash:'세차장',garage:'정비소',drive:'운전하기',videos:'탈것 영상'};
+const GAME_HINT={quiz:'소리를 듣고 그림을 콕!',match:'똑같은 그림 두 장을 찾아요',book:'책장을 넘겨요',album:'내가 칠한 그림이 모여 있어요',puzzle:'조각을 끌어서 맞춰요',shadow:'누구의 그림자일까?',spot:'두 그림에서 다른 곳을 콕!',wash:'문질러서 깨끗하게!',garage:'바퀴를 끼우고 기름을 넣어요',drive:'길을 따라 운전해요',videos:'진짜 탈것을 봐요'};
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const AUTO=['#F2545B','#FFD93D','#FF9F43','#5BC27A','#9B6BE0','#FF8FC1','#3D7BE0','#A8714A'];
@@ -1029,12 +1048,70 @@ const BOOKS=[
   ['boat','배','바다에는 배가 뿌우.','깃발이 바람에 펄럭여요.'],
   ['sub','잠수함','잠수함은 바닷속으로.','보글보글 물방울이 올라가요.'],
   ['whale','고래','고래가 물을 뿜어요.','안녕, 바다 친구들!']]}];
+/* 옛 동화: 이야기는 직접 다시 씀, 그림은 밀로 윈터 『The Aesop for Children』(1919, 퍼블릭 도메인, 위키미디어 공용) */
+const W1='https://upload.wikimedia.org/wikipedia/commons/';
+const TIMG={hare:W1+'e/ea/The_Tortoise_and_the_Hare_-_Project_Gutenberg_etext_19994.jpg',wind:W1+'5/52/The_North_Wind_and_the_Sun_-_Wind_-_Project_Gutenberg_etext_19994.jpg',sun:W1+'6/6f/The_North_Wind_and_the_Sun_-_Sun_-_Project_Gutenberg_etext_19994.jpg',
+  town:W1+'c/c4/The_Town_Mouse_and_the_Country_Mouse_-_town_mice_-_Project_Gutenberg_etext_19994.jpg',country:W1+'d/d8/The_Town_Mouse_and_the_Country_Mouse_-_country_mice_-_Project_Gutenberg_etext_19994.jpg',
+  wolf:W1+'6/67/The_Boy_Who_Cried_Wolf_-_Project_Gutenberg_etext_19994.jpg',goose:W1+'8/80/The_Goose_That_Laid_the_Golden_Eggs_-_Project_Gutenberg_etext_19994.jpg',
+  fox:W1+'e/e1/The_Fox_and_the_Grapes_-_Project_Gutenberg_etext_19994.jpg',crow:W1+'a/af/The_Crow_and_the_Pitcher_-_Project_Gutenberg_etext_19994.jpg'};
+const TALES=[
+ {title:'토끼와 거북이',cover:'hare',pages:[
+  ['hare',[1,50,50],'토끼와 거북이','토끼와 거북이가 달리기 시합을 했어요.','"누가 먼저 저 언덕에 갈까?"'],
+  ['hare',[1.9,30,30],'토끼','토끼는 깡충깡충 아주 빨리 달렸어요.','"거북아, 너는 너무 느려!"'],
+  ['hare',[1.8,55,72],'거북이','거북이는 엉금엉금 천천히 걸었어요.','그래도 쉬지 않고 계속 걸었어요.'],
+  ['hare',[2.2,25,28],'쿨쿨','토끼는 길가에서 낮잠을 잤어요.','"조금만 자고 가야지." 쿨쿨.'],
+  ['hare',[2.4,85,10],'언덕','거북이가 먼저 언덕에 도착했어요!','토끼가 깜짝 놀라 깼어요.'],
+  ['hare',[1,50,50],'끝','천천히 해도 끝까지 하면 해낼 수 있어요.','거북이야, 정말 잘했어!']]},
+ {title:'해와 바람',cover:'sun',pages:[
+  ['wind',[1,50,50],'해와 바람','해와 바람이 누가 더 힘이 센지 내기를 했어요.','"저 사람 외투를 벗겨 보자!"'],
+  ['wind',[1.8,15,40],'바람','바람이 쌩쌩 힘껏 불었어요.','휘이잉! 휘이잉!'],
+  ['wind',[1.8,60,55],'외투','나그네는 추워서 외투를 꼭 붙잡았어요.','바람이 셀수록 더 꼭 여몄어요.'],
+  ['sun',[2,20,22],'해','이번엔 해가 방긋 웃으며 따뜻하게 비췄어요.','햇볕이 쨍쨍, 점점 따뜻해졌어요.'],
+  ['sun',[1.8,75,70],'더워','"아, 더워!" 나그네가 외투를 벗었어요.','그늘에 앉아 땀을 닦았어요.'],
+  ['sun',[1,50,50],'끝','해가 이겼어요!','따뜻한 마음이 세찬 바람보다 힘이 세요.']]},
+ {title:'시골쥐와 도시쥐',cover:'country',pages:[
+  ['country',[1,50,50],'시골쥐','시골쥐가 친구 도시쥐를 초대했어요.','보리와 콩을 정성껏 차렸어요.'],
+  ['country',[1.8,82,45],'도시쥐','도시쥐가 말했어요. "이건 너무 소박해!"','"우리 집에 가면 맛있는 게 많아."'],
+  ['town',[1,50,50],'도시','도시쥐 집에는 맛있는 음식이 가득했어요.','과일, 케이크, 치즈까지!'],
+  ['town',[2,45,85],'쉿!','그런데 갑자기 사람이 들어왔어요!','두 친구는 깜짝 놀라 숨었어요.'],
+  ['town',[1.7,30,20],'무서워','쥐들은 마음 편히 먹을 수가 없었어요.','덜덜 떨면서 기다렸어요.'],
+  ['country',[1,50,50],'끝','시골쥐는 집으로 돌아가며 말했어요.','"소박해도 마음 편한 우리 집이 최고야!"']]},
+ {title:'양치기 소년',cover:'wolf',pages:[
+  ['wolf',[1,50,50],'양치기 소년','양치기 소년이 언덕에서 양을 지켰어요.','심심해진 소년이 장난을 쳤어요.'],
+  ['wolf',[2,45,40],'늑대다!','"늑대가 나타났어요!" 소년이 소리쳤어요.','마을 사람들이 헐레벌떡 달려왔어요.'],
+  ['wolf',[1.9,85,58],'거짓말','하지만 늑대는 없었어요.','소년은 깔깔 웃었어요.'],
+  ['wolf',[2,30,75],'진짜 늑대','어느 날 진짜 늑대가 나타났어요!','"늑대다! 도와주세요!"'],
+  ['wolf',[1.6,45,40],'아무도','이번엔 아무도 오지 않았어요.','또 장난인 줄 알았거든요.'],
+  ['wolf',[1,50,50],'끝','거짓말을 하면 믿어 주지 않아요.','정직하게 말하는 게 제일 좋아요.']]},
+ {title:'황금알을 낳는 거위',cover:'goose',pages:[
+  ['goose',[1,50,50],'거위','농부에게 특별한 거위가 있었어요.','날마다 황금알을 하나씩 낳았어요.'],
+  ['goose',[2,75,75],'황금알','반짝반짝 황금알!','농부는 아주 기뻤어요.'],
+  ['goose',[2,35,25],'욕심','"한꺼번에 많이 갖고 싶어!"','농부는 욕심이 생겼어요.'],
+  ['goose',[1.5,60,60],'꽥꽥','농부가 자꾸 재촉하자 거위가 놀라 달아났어요.','이제 황금알은 하나도 없어요.'],
+  ['goose',[1,50,50],'끝','욕심을 부리면 소중한 걸 잃어요.','하루에 하나도 정말 고마운 거예요.']]},
+ {title:'여우와 포도',cover:'fox',pages:[
+  ['fox',[1,50,50],'여우','배고픈 여우가 포도밭을 지나갔어요.','높은 곳에 포도가 주렁주렁!'],
+  ['fox',[2.2,22,10],'포도','"와, 맛있겠다!"','여우는 침을 꼴깍 삼켰어요.'],
+  ['fox',[2,50,78],'폴짝','폴짝! 폴짝! 하지만 닿지 않았어요.','여우는 지쳐 버렸어요.'],
+  ['fox',[1,50,50],'끝','"흥, 저 포도는 분명 실 거야."','여우는 투덜대며 가 버렸어요.']]},
+ {title:'까마귀와 물병',cover:'crow',pages:[
+  ['crow',[1,50,50],'까마귀','목마른 까마귀가 물병을 찾았어요.','그런데 물이 바닥에 조금밖에 없었어요.'],
+  ['crow',[2,20,62],'물병','부리가 물에 닿지 않았어요.','"어떻게 하지?"'],
+  ['crow',[1.9,70,55],'돌멩이','까마귀는 돌멩이를 하나씩 넣었어요.','퐁당! 퐁당! 물이 점점 올라왔어요.'],
+  ['crow',[1,50,50],'끝','드디어 꿀꺽꿀꺽 물을 마셨어요!','차근차근 생각하면 방법이 있어요.']]}
+];
 let book={b:-1,i:0};
 function showBooks(){
   clearTimers();book={b:-1,i:0};const g=$('game');g.innerHTML='<div class="blist"></div>';const box=g.querySelector('.blist');
+  box.insertAdjacentHTML('beforeend','<h3 class="psec">옛 동화</h3>');
+  TALES.forEach((bk,k)=>{const b=document.createElement('button');b.type='button';b.className='bcover tale';
+    b.innerHTML=`<img src="${TIMG[bk.cover]}" alt="" loading="lazy"><span>${bk.title}</span>`;
+    onTap(b,()=>{book={set:'t',b:k,i:0,last:null};tone(520);showTale()});box.appendChild(b)});
+  box.insertAdjacentHTML('beforeend','<h3 class="psec">탈것 그림책</h3>');
   BOOKS.forEach((bk,k)=>{const b=document.createElement('button');b.type='button';b.className='bcover';
     const sv=thumb(PICS.find(p=>p.id===bk.pages[0][0]));b.appendChild(sv);b.insertAdjacentHTML('beforeend',`<span>${bk.title}</span>`);
     onTap(b,()=>{book={b:k,i:0};tone(520);showPage()});box.appendChild(b)});
+  box.insertAdjacentHTML('beforeend','<p class="credit">옛 동화 그림: 밀로 윈터, 『The Aesop for Children』(1919) · 저작권이 끝난 그림(퍼블릭 도메인) · 위키미디어 공용</p>');
   $('dots').hidden=true;speak('어떤 책을 읽을까?');
 }
 function showPage(){
@@ -1049,6 +1126,23 @@ function showPage(){
   onTap($('pPrev'),()=>{if(book.i>0){book.i--;tone(440,.08);showPage()}else{tone(380,.1);showBooks()}});
   onTap($('pNext'),()=>{if(book.i<bk.pages.length-1){book.i++;tone(560,.08);showPage()}else{confetti();speak('끝! 재미있었지?');later(showBooks,2600)}});
   later(()=>readPage(text),400);
+}
+function showTale(){
+  clearTimers();try{speechSynthesis.cancel()}catch(e){}
+  const bk=TALES[book.b],[im,[z,fx,fy],word,l1,l2]=bk.pages[book.i];
+  const text=S.level===0?word:S.level===1?l1:l1+' '+l2;
+  const g=$('game');g.innerHTML=`<div class="page"><div class="page-pic"><div class="tale-frame"><img class="tale-img" src="${TIMG[im]}" alt=""><p class="tale-off" hidden>인터넷이 연결되면 그림이 보여요</p></div></div><div class="page-text"></div>
+    <div class="page-nav"><button class="pnav" id="pPrev" type="button" aria-label="앞 장">◀</button><span class="pnum">${bk.title} · ${book.i+1} / ${bk.pages.length}</span><button class="pnav" id="pNext" type="button" aria-label="다음 장">▶</button></div></div>`;
+  const img=g.querySelector('.tale-img'),from=book.last&&book.last.im===im?book.last:{z:1,fx:50,fy:50};
+  img.style.transformOrigin=`${from.fx}% ${from.fy}%`;img.style.transform=`scale(${from.z})`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{img.style.transformOrigin=`${fx}% ${fy}%`;img.style.transform=`scale(${z})`}));
+  {const off=g.querySelector('.tale-off');img.onerror=()=>{img.hidden=true;off.hidden=false}}
+  book.last={im,z,fx,fy};
+  g.querySelector('.page-text').innerHTML=text.split(' ').map(w=>`<span>${w}</span>`).join(' ');
+  onTap(g.querySelector('.page-pic'),()=>{tone(660,.12);readPage(text)});
+  onTap($('pPrev'),()=>{if(book.i>0){book.i--;tone(440,.08);showTale()}else{tone(380,.1);showBooks()}});
+  onTap($('pNext'),()=>{if(book.i<bk.pages.length-1){book.i++;tone(560,.08);showTale()}else{confetti();speak('끝! 재미있었지?');later(showBooks,2600)}});
+  later(()=>readPage(text),700);
 }
 function readPage(text){
   const spans=[...$('game').querySelectorAll('.page-text span')];if(!spans.length)return;
@@ -1297,6 +1391,30 @@ function driveAt(e){
   if(d.cur>=d.N-2){setSteps(['출발','신호등','도착'],2);d.cw.classList.add('parked');speak('도착! 차고에 쏙!');if(VSFX[d.p.id])later(VSFX[d.p.id],500);gameDone('도착!','rstars',d.p)}
 }
 
+/* 탈것 영상: 위키미디어 공용의 광고 없는 영상 (각 영상 아래에 만든 사람·라이선스 표시) */
+const VIDEOS=[["fire", "소방차", 60, "https://upload.wikimedia.org/wikipedia/commons/transcoded/e/e4/45th_Civil_Engineering_Squadron_fire_engine_push-in_ceremony_%281018174%29.webm/45th_Civil_Engineering_Squadron_fire_engine_push-in_ceremony_%281018174%29.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/45th_Civil_Engineering_Squadron_fire_engine_push-in_ceremony_%281018174%29.webm/500px-seek%3D25-45th_Civil_Engineering_Squadron_fire_engine_push-in_ceremony_%281018174%29.webm.jpg", "Public domain", "U.S. Space Force video by Senior Airman Alyssa Bankston", "https://commons.wikimedia.org/wiki/File:45th_Civil_Engineering_Squadron_fire_engine_push-in_ceremony_(1018174).webm"], ["steam", "증기기관차", 47, "https://upload.wikimedia.org/wikipedia/commons/transcoded/a/a5/Steam_locomotive_at_the_Bronnitcy_station.webm/Steam_locomotive_at_the_Bronnitcy_station.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Steam_locomotive_at_the_Bronnitcy_station.webm/500px-seek%3D30-Steam_locomotive_at_the_Bronnitcy_station.webm.jpg", "CC BY-SA 4.0", "ElsyChester", "https://commons.wikimedia.org/wiki/File:Steam_locomotive_at_the_Bronnitcy_station.webm"], ["tgv", "고속열차", 15, "https://upload.wikimedia.org/wikipedia/commons/transcoded/5/54/TGV_passing_through_Haute-Picardie_station.webm/TGV_passing_through_Haute-Picardie_station.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/TGV_passing_through_Haute-Picardie_station.webm/500px--TGV_passing_through_Haute-Picardie_station.webm.jpg", "CC BY-SA 4.0", "Daniel Case", "https://commons.wikimedia.org/wiki/File:TGV_passing_through_Haute-Picardie_station.webm"], ["subway", "지하철", 40, "https://upload.wikimedia.org/wikipedia/commons/transcoded/6/6c/NYC_Subway_trains_at_Prospect_Park_Station.webm/NYC_Subway_trains_at_Prospect_Park_Station.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/NYC_Subway_trains_at_Prospect_Park_Station.webm/500px-seek%3D34-NYC_Subway_trains_at_Prospect_Park_Station.webm.jpg", "CC BY-SA 4.0", "GK tramrunner RU", "https://commons.wikimedia.org/wiki/File:NYC_Subway_trains_at_Prospect_Park_Station.webm"], ["digger", "포크레인", 39, "https://upload.wikimedia.org/wikipedia/commons/transcoded/3/3d/Excavator_ballet%2C_Oberlech_321%2C_6764_Lech_am_Arlberg%2C_Austria.webm/Excavator_ballet%2C_Oberlech_321%2C_6764_Lech_am_Arlberg%2C_Austria.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/Excavator_ballet%2C_Oberlech_321%2C_6764_Lech_am_Arlberg%2C_Austria.webm/500px--Excavator_ballet%2C_Oberlech_321%2C_6764_Lech_am_Arlberg%2C_Austria.webm.jpg", "CC BY-SA 4.0", "KaiKemmann", "https://commons.wikimedia.org/wiki/File:Excavator_ballet,_Oberlech_321,_6764_Lech_am_Arlberg,_Austria.webm"], ["garbage", "청소차", 47, "https://upload.wikimedia.org/wikipedia/commons/transcoded/3/37/Front_loading_garbage_truck_loading_a_dumpster.webm/Front_loading_garbage_truck_loading_a_dumpster.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Front_loading_garbage_truck_loading_a_dumpster.webm/500px--Front_loading_garbage_truck_loading_a_dumpster.webm.jpg", "CC BY-SA 4.0", "Grendelkhan", "https://commons.wikimedia.org/wiki/File:Front_loading_garbage_truck_loading_a_dumpster.webm"], ["mixer", "레미콘", 23, "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/8d/Concrete_mixer_truck_-_Tokyo_-_292692.webm/Concrete_mixer_truck_-_Tokyo_-_292692.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Concrete_mixer_truck_-_Tokyo_-_292692.webm/500px--Concrete_mixer_truck_-_Tokyo_-_292692.webm.jpg", "CC BY-SA 4.0", "Nesnad", "https://commons.wikimedia.org/wiki/File:Concrete_mixer_truck_-_Tokyo_-_292692.webm"], ["crane", "타워크레인", 115, "https://upload.wikimedia.org/wikipedia/commons/transcoded/6/69/Building_construction_crane_Moira_Close_Broadwater_Farm_Haringey_2025_92.webm/Building_construction_crane_Moira_Close_Broadwater_Farm_Haringey_2025_92.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Building_construction_crane_Moira_Close_Broadwater_Farm_Haringey_2025_92.webm/500px-seek%3D40-Building_construction_crane_Moira_Close_Broadwater_Farm_Haringey_2025_92.webm.jpg", "CC BY-SA 4.0", "Acabashi", "https://commons.wikimedia.org/wiki/File:Building_construction_crane_Moira_Close_Broadwater_Farm_Haringey_2025_92.webm"], ["tractor", "트랙터", 102, "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/86/Kirovets_traktor%2C_Kirovets_tractor%2C_Estonia_2021.webm/Kirovets_traktor%2C_Kirovets_tractor%2C_Estonia_2021.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Kirovets_traktor%2C_Kirovets_tractor%2C_Estonia_2021.webm/500px--Kirovets_traktor%2C_Kirovets_tractor%2C_Estonia_2021.webm.jpg", "CC0", "Sillerkiil", "https://commons.wikimedia.org/wiki/File:Kirovets_traktor,_Kirovets_tractor,_Estonia_2021.webm"], ["combine", "콤바인", 63, "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/26/Combine_harvester_on_a_Koeru_field_in_Estonia%2C_July_2021.webm/Combine_harvester_on_a_Koeru_field_in_Estonia%2C_July_2021.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Combine_harvester_on_a_Koeru_field_in_Estonia%2C_July_2021.webm/500px--Combine_harvester_on_a_Koeru_field_in_Estonia%2C_July_2021.webm.jpg", "CC0", "Sillerkiil", "https://commons.wikimedia.org/wiki/File:Combine_harvester_on_a_Koeru_field_in_Estonia,_July_2021.webm"], ["bus", "버스", 41, "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/85/Sj%C3%A4lvk%C3%B6rande_buss.webm/Sj%C3%A4lvk%C3%B6rande_buss.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Sj%C3%A4lvk%C3%B6rande_buss.webm/500px--Sj%C3%A4lvk%C3%B6rande_buss.webm.jpg", "CC BY-SA 4.0", "Hannibal", "https://commons.wikimedia.org/wiki/File:Sj%C3%A4lvk%C3%B6rande_buss.webm"], ["heli", "헬리콥터", 30, "https://upload.wikimedia.org/wikipedia/commons/transcoded/6/6a/UNC_Carolina_Air_Care_helicopter_landing.webm/UNC_Carolina_Air_Care_helicopter_landing.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/UNC_Carolina_Air_Care_helicopter_landing.webm/500px--UNC_Carolina_Air_Care_helicopter_landing.webm.jpg", "CC BY-SA 4.0", "Bbfd", "https://commons.wikimedia.org/wiki/File:UNC_Carolina_Air_Care_helicopter_landing.webm"], ["plane", "비행기 이륙", 60, "https://upload.wikimedia.org/wikipedia/commons/transcoded/8/81/United_Airlines_N69826_737-900ER_Takeoff_Portland_Airport_%28PDX%29.webm/United_Airlines_N69826_737-900ER_Takeoff_Portland_Airport_%28PDX%29.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/United_Airlines_N69826_737-900ER_Takeoff_Portland_Airport_%28PDX%29.webm/500px--United_Airlines_N69826_737-900ER_Takeoff_Portland_Airport_%28PDX%29.webm.jpg", "CC BY 3.0", "PDX Aviation - HD(ish) Plane Spotting", "https://commons.wikimedia.org/wiki/File:United_Airlines_N69826_737-900ER_Takeoff_Portland_Airport_(PDX).webm"], ["rocket", "로켓 발사", 116, "https://upload.wikimedia.org/wikipedia/commons/transcoded/a/a3/Artemis_I_Launch_from_NASA_Causeway_%28Slo_Mo%29_%28GX010506%29.webm/Artemis_I_Launch_from_NASA_Causeway_%28Slo_Mo%29_%28GX010506%29.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Artemis_I_Launch_from_NASA_Causeway_%28Slo_Mo%29_%28GX010506%29.webm/500px--Artemis_I_Launch_from_NASA_Causeway_%28Slo_Mo%29_%28GX010506%29.webm.jpg", "Public domain", "NASA Marshall Space Flight Center", "https://commons.wikimedia.org/wiki/File:Artemis_I_Launch_from_NASA_Causeway_(Slo_Mo)_(GX010506).webm"], ["ferry", "배", 49, "https://upload.wikimedia.org/wikipedia/commons/transcoded/5/5f/Ferry_departing_from_Central_Pier.ogv/Ferry_departing_from_Central_Pier.ogv.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Ferry_departing_from_Central_Pier.ogv/500px--Ferry_departing_from_Central_Pier.ogv.jpg", "CC BY-SA 3.0", "Pleclown", "https://commons.wikimedia.org/wiki/File:Ferry_departing_from_Central_Pier.ogv"], ["tram", "전차", 38, "https://upload.wikimedia.org/wikipedia/commons/transcoded/b/bc/Kolomna_tram_127_2007-01_1167823320_Zelonaya_street_71-605.webm/Kolomna_tram_127_2007-01_1167823320_Zelonaya_street_71-605.webm.480p.vp9.webm", "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Kolomna_tram_127_2007-01_1167823320_Zelonaya_street_71-605.webm/500px-seek%3D12-Kolomna_tram_127_2007-01_1167823320_Zelonaya_street_71-605.webm.jpg", "CC BY 4.0", "Artyom Svetlov", "https://commons.wikimedia.org/wiki/File:Kolomna_tram_127_2007-01_1167823320_Zelonaya_street_71-605.webm"]].map(([id,name,dur,src,poster,lic,by,page])=>({id,name,dur,src,poster,lic,by,page}));
+let videoPlaying=false;
+const mmss=t=>`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
+function showVideos(){
+  clearTimers();videoPlaying=false;const g=$('game');$('dots').hidden=true;
+  g.innerHTML='<div class="vgrid"></div><p class="credit">영상: 위키미디어 공용(광고 없음). 영상마다 만든 사람과 라이선스를 재생 화면 아래에 적었어요.</p>';
+  const box=g.querySelector('.vgrid');
+  VIDEOS.forEach((v,k)=>{const b=document.createElement('button');b.type='button';b.className='vcard';
+    b.innerHTML=`<span class="vthumb"><img src="${v.poster}" alt="" loading="lazy"><i class="vplay"></i><em>${mmss(v.dur)}</em></span><span class="vname">${v.name}</span>`;
+    onTap(b,()=>{tone(520);playVideo(k)});box.appendChild(b)});
+  later(()=>speak('어떤 탈것을 볼까?'),200);
+}
+function playVideo(k){
+  clearTimers();const v=VIDEOS[k],g=$('game');videoPlaying=true;musicOff();try{speechSynthesis.cancel()}catch(e){}
+  g.innerHTML=`<div class="vplayer"><div class="vbox"><video id="vid" controls playsinline autoplay preload="auto" poster="${v.poster}" src="${v.src}"></video><p class="tale-off" hidden>인터넷이 연결되면 볼 수 있어요</p></div>
+    <div class="vinfo"><b>${v.name}</b><small>영상: ${v.by} · ${v.lic} · 위키미디어 공용</small></div>
+    <div class="page-nav"><button class="pnav" id="pPrev" type="button" aria-label="앞 영상">◀</button><span class="pnum">${k+1} / ${VIDEOS.length}</span><button class="pnav" id="pNext" type="button" aria-label="다음 영상">▶</button></div></div>`;
+  const vid=$('vid');vid.play().catch(()=>{});{const off=g.querySelector('.tale-off');vid.onerror=()=>{vid.hidden=true;off.hidden=false}}
+  vid.onended=()=>{tone(660,.15)};
+  onTap($('pPrev'),()=>{k>0?playVideo(k-1):showVideos()});
+  onTap($('pNext'),()=>{k<VIDEOS.length-1?playVideo(k+1):showVideos()});
+}
+
 /* 내 그림첩 보기 */
 const artOf=a=>{const p=PICS.find(x=>x.id===a.id);return p?thumbFrom(p,a.f||{},a.pt||{},a.st||[],false):null};
 const dateOf=t=>{const d=new Date(t);return`${d.getMonth()+1}월 ${d.getDate()}일`};
@@ -1461,10 +1579,10 @@ function render(){
   document.querySelectorAll('.bsz[data-s]').forEach(b=>b.hidden=S.level===0);
   $('guideBtn').hidden=S.level!==2;
   drawGuide();
-  const game=$('game');game.hidden=true;game.innerHTML='';clearTimers();
+  const game=$('game');game.hidden=true;game.innerHTML='';clearTimers();videoPlaying=false;
   const isGame=GAME_MODES.includes(S.mode);document.querySelector('.app').classList.toggle('game',isGame);
   if(isGame){done.hidden=true;$('picName').textContent=GAME_TITLE[S.mode];document.querySelector('.hint').textContent=GAME_HINT[S.mode];
-    game.hidden=false;({quiz:startQuiz,match:startMatch,book:showBooks,album:showAlbum,puzzle:startPuzzle,shadow:startShadow,spot:startSpot,wash:startWash,garage:startGarage,drive:startDrive})[S.mode]();syncTools();return}
+    game.hidden=false;({quiz:startQuiz,match:startMatch,book:showBooks,album:showAlbum,puzzle:startPuzzle,shadow:startShadow,spot:startSpot,wash:startWash,garage:startGarage,drive:startDrive,videos:showVideos})[S.mode]();syncTools();return}
   if(draw){$('picName').textContent='자유 그리기';done.hidden=true;sizePaper();syncTools();return}
   const p=PICS[S.pic];
   board.insertAdjacentHTML('afterbegin',makeSvg(p));
@@ -1716,6 +1834,7 @@ function openPicker(){
   const box=$('picks');box.innerHTML='<h3 class="psec">놀이</h3>';
   const MODES=[['quiz','소리 맞히기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF1EC"/><path d="M100 160 L150 160 L214 108 L214 292 L150 240 L100 240 Z" fill="#FF7A59"/><path d="M252 150 Q288 200 252 250 M290 116 Q350 200 290 284" fill="none" stroke="#FF7A59" stroke-width="22" stroke-linecap="round"/></svg>'],
     ['match','짝 맞추기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F1F7FC"/><g transform="rotate(-8 120 200)"><rect x="50" y="90" width="140" height="210" rx="24" fill="#FF7A59"/><text x="120" y="226" font-size="96" text-anchor="middle" fill="#fff" font-family="sans-serif">?</text></g><g transform="rotate(8 280 200)"><rect x="210" y="90" width="140" height="210" rx="24" fill="#fff" stroke="#2B2D42" stroke-width="10"/><circle cx="280" cy="195" r="42" fill="#FFD93D" stroke="#2B2D42" stroke-width="8"/></g></svg>'],
+    ['videos','탈것 영상','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#EDEBFF"/><rect x="60" y="100" width="280" height="190" rx="24" fill="#2B2D42"/><path d="M175 150 L250 195 L175 240 Z" fill="#fff"/><g fill="#FFD93D"><rect x="76" y="114" width="22" height="14" rx="3"/><rect x="76" y="262" width="22" height="14" rx="3"/><rect x="302" y="114" width="22" height="14" rx="3"/><rect x="302" y="262" width="22" height="14" rx="3"/></g></svg>'],
     ['wash','세차장','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#EAF6FF"/><g stroke="#2B2D42" stroke-width="9" stroke-linejoin="round"><path d="M60 250 L60 222 Q64 206 88 202 L120 202 L150 150 Q155 142 164 142 L246 142 Q254 142 260 150 L286 202 L314 202 Q338 206 344 228 L344 250 Q344 262 330 262 L74 262 Q60 262 60 250 Z" fill="#F2545B"/><circle cx="122" cy="262" r="28" fill="#3A3A48"/><circle cx="282" cy="262" r="28" fill="#3A3A48"/></g><g fill="#fff" stroke="#9CC9E8" stroke-width="5"><circle cx="110" cy="120" r="22"/><circle cx="150" cy="96" r="14"/><circle cx="300" cy="110" r="18"/><circle cx="250" cy="300" r="16"/><circle cx="170" cy="310" r="12"/></g></svg>'],
     ['garage','정비소','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF6E5"/><g stroke="#2B2D42" stroke-width="9" stroke-linejoin="round"><circle cx="150" cy="230" r="72" fill="#3A3A48"/><circle cx="150" cy="230" r="28" fill="#D3C0F5"/><path d="M250 120 L330 120 L330 300 L250 300 Z" fill="#F2545B"/><rect x="266" y="140" width="48" height="36" fill="#FFD93D"/><path d="M330 200 Q360 210 352 260" fill="none"/></g></svg>'],
     ['drive','운전하기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#B8E986"/><path d="M60 320 C150 330 140 200 220 200 S300 120 340 90" fill="none" stroke="#6B7280" stroke-width="56" stroke-linecap="round"/><path d="M60 320 C150 330 140 200 220 200 S300 120 340 90" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="14 12"/><rect x="290" y="140" width="34" height="62" rx="9" fill="#3A3A48" stroke="#2B2D42" stroke-width="5"/><circle cx="307" cy="158" r="9" fill="#F2545B"/><circle cx="307" cy="184" r="9" fill="#5BC27A"/></svg>'],
@@ -1784,7 +1903,7 @@ buildPalette();buildTray();render();
   addEventListener('appinstalled',()=>{btn.hidden=true});
   if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   /* 새 버전 확인: 앱이 열리거나 다시 화면에 나올 때 */
-  const APP_V="10";
+  const APP_V="11";
   function checkUpdate(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
       if(!j||j.v===APP_V)return;
