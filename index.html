@@ -319,6 +319,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .shadow-big{height:min(40vh,330px);aspect-ratio:1;max-width:100%;display:grid;place-items:center}
 .shadow-big svg{width:100%;height:100%}
 .silhouette .scene,.silhouette .stickers,.noscene .scene,.noscene .stickers{display:none}
+.noscene>.fx{display:none}
 .silhouette *{fill:#3A3A48!important;stroke:#3A3A48!important}
 .spot{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;height:100%;align-self:stretch}
 .spot>div{display:grid;place-items:center;min-height:0;min-width:0}
@@ -351,6 +352,32 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .pic g.pwing-r.jiggle{animation:flapr .18s ease-in-out 4 alternate;transform-origin:278px 220px}
 .pic g.rarm-l.jiggle{animation:flapw .25s ease-in-out 2 alternate;transform-origin:103px 190px}
 .pic g.rarm-r.jiggle{animation:flapr .25s ease-in-out 2 alternate;transform-origin:297px 190px}
+/* 세차장 · 정비소 · 운전하기 */
+.stagebox{width:100%;height:100%;display:grid;place-items:center;min-height:0;align-self:stretch}
+.stagebox svg{height:100%;max-width:100%;aspect-ratio:1;touch-action:none;border-radius:20px}
+.stagebox svg.drive{aspect-ratio:16/9;width:100%;height:auto;max-height:100%}
+.stagebox svg.drive svg{width:150px;height:150px;max-width:none;aspect-ratio:auto;border-radius:0}
+.steps-ind{font-size:17px}.dots .steps-ind span{width:auto;height:auto;border:0;border-radius:0;background:none;color:var(--muted)}.steps-ind b{color:var(--accent);font-weight:400}
+.pic .washfx{pointer-events:none}
+.pic .mud{fill:#8B5A2B;stroke:#5E3A18;stroke-width:3;transform-box:fill-box;transform-origin:center;transition:opacity .35s,transform .35s}
+.pic .mud.gone{opacity:0;transform:scale(.2)}
+.pic .bub{fill:rgba(255,255,255,.92);stroke:#9CC9E8;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:stkin .25s ease-out}
+.pic .bub.pop{animation:popout .25s forwards}
+@keyframes popout{to{transform:scale(1.6);opacity:0}}
+.pic .drop{fill:#6EC6F0;transform-box:fill-box;animation:fall .6s ease-in forwards}
+@keyframes fall{to{transform:translateY(90px);opacity:0}}
+.pic .spark{fill:#FFD93D;stroke:#fff;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:twinkle .7s ease-in-out infinite alternate}
+@keyframes twinkle{from{transform:scale(.4);opacity:.5}to{transform:scale(1.15);opacity:1}}
+.pic .slot{fill:rgba(255,255,255,.6);stroke:#F2545B;stroke-width:5;stroke-dasharray:10 8;animation:twinkle .8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+.garage{position:relative;width:100%;height:100%;display:grid;grid-template-rows:minmax(0,1fr) 120px;gap:8px;align-self:stretch}
+.tray{position:relative;background:var(--bg);border-radius:20px}
+.token{position:absolute;touch-action:none;cursor:grab;filter:drop-shadow(0 4px 0 rgba(43,45,66,.25))}
+.token svg{width:100%;height:100%;display:block;pointer-events:none}
+.token.drag{filter:drop-shadow(0 10px 12px rgba(43,45,66,.35));transform:scale(1.08)}
+.token.docked{pointer-events:none;opacity:.85}
+.gauge{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:min(46%,320px);height:30px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 4px var(--ink);overflow:hidden}
+.gauge i{display:block;height:100%;width:0;background:linear-gradient(90deg,#FFD93D,#5BC27A);transition:width .22s}
+.drive .carwrap.parked{transition:opacity .8s;opacity:.3}
 /* 길게 누르는 버튼: 크롬 기본 메뉴가 끼어들지 않게 */
 .tool,#picName{touch-action:none;-webkit-touch-callout:none}
 .toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:3;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:18px;white-space:nowrap;animation:rise .25s ease-out}
@@ -456,7 +483,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
   <div class="picker-card" role="dialog" aria-label="나이 단계" style="width:min(620px,100%)">
     <div class="picker-head"><h2>나이 단계</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
     <div class="levels" id="levels"></div>
-    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 9</b></p>
+    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 10</b></p>
   </div>
 </div>
 <div class="picker" id="share" hidden>
@@ -889,9 +916,9 @@ function whistle(){tone(880,.5,0,.12);tone(1046,.5,0,.08)}
 const VSFX={taxi:()=>horn(),garbage:()=>horn(),camper:()=>horn(),dozer:()=>horn(),roller:()=>horn(),tow:()=>siren(),ktx:()=>whistle(),subway:()=>{tone(660,.35,0,.14);tone(523,.45,.4,.14)},balloon:()=>{tone(120,.6,0,.12)},yacht:()=>{tone(147,.9,0,.18);tone(196,.9,0,.1)},trex:()=>roar(),trike:()=>roar(),lion:()=>roar(),elephant:()=>{tone(330,.5,0,.14);tone(440,.5,0,.1)},penguin:()=>{tone(700,.1,0,.12);tone(700,.1,.2,.12)},castle:()=>{[523,659,784,1047].forEach((n,i)=>tone(n,.2,i*.15,.16))},robot:()=>{tone(880,.08,0,.12);tone(660,.08,.12,.12);tone(990,.12,.24,.12)},icecream:()=>{tone(1046,.15,0,.12);tone(1318,.2,.15,.12)},house:()=>{tone(784,.25,0,.12);tone(659,.35,.3,.12)},ambulance:siren,mixer:horn,crane:horn,forklift:()=>{tone(1000,.12,0,.1);tone(1000,.12,.3,.1)},moto:()=>{for(let i=0;i<8;i++)tone(80+i*12,.1,i*.09,.2)},sub:()=>{for(let i=0;i<6;i++)tone(400+Math.random()*300,.06,i*.12,.1)},car:horn,bus:horn,dump:horn,digger:horn,tractor:horn,fire:siren,police:siren,train:whistle,boat:()=>{tone(147,.9,0,.18);tone(196,.9,0,.1)},rocket:()=>{tone(160,1,0,.16);tone(220,1,.15,.1)},duck:()=>{tone(620,.1,0,.14);tone(620,.1,.18,.14)}};
 
 /* 놀이 공통 */
-const GAME_MODES=['quiz','match','book','album','puzzle','shadow','spot'];
-const GAME_TITLE={quiz:'소리 맞히기',match:'짝 맞추기',book:'그림책',album:'내 그림첩',puzzle:'조각 퍼즐',shadow:'그림자 찾기',spot:'다른 곳 찾기'};
-const GAME_HINT={quiz:'소리를 듣고 그림을 콕!',match:'똑같은 그림 두 장을 찾아요',book:'책장을 넘겨요',album:'내가 칠한 그림이 모여 있어요',puzzle:'조각을 끌어서 맞춰요',shadow:'누구의 그림자일까?',spot:'두 그림에서 다른 곳을 콕!'};
+const GAME_MODES=['quiz','match','book','album','puzzle','shadow','spot','wash','garage','drive'];
+const GAME_TITLE={quiz:'소리 맞히기',match:'짝 맞추기',book:'그림책',album:'내 그림첩',puzzle:'조각 퍼즐',shadow:'그림자 찾기',spot:'다른 곳 찾기',wash:'세차장',garage:'정비소',drive:'운전하기'};
+const GAME_HINT={quiz:'소리를 듣고 그림을 콕!',match:'똑같은 그림 두 장을 찾아요',book:'책장을 넘겨요',album:'내가 칠한 그림이 모여 있어요',puzzle:'조각을 끌어서 맞춰요',shadow:'누구의 그림자일까?',spot:'두 그림에서 다른 곳을 콕!',wash:'문질러서 깨끗하게!',garage:'바퀴를 끼우고 기름을 넣어요',drive:'길을 따라 운전해요'};
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const AUTO=['#F2545B','#FFD93D','#FF9F43','#5BC27A','#9B6BE0','#FF8FC1','#3D7BE0','#A8714A'];
@@ -1038,20 +1065,22 @@ function gameDone(msg,key,p){
 /* 조각 퍼즐: 끌어다 제자리에 놓기 (흐린 밑그림이 도와줌) */
 let pz=null,pzZ=10;
 function startPuzzle(){
-  done.hidden=true;const[C,R]=[[2,2],[3,2],[3,3]][S.level]||[3,2],p=PICS[rnd(PICS.length)];
+  done.hidden=true;const[C,R]=[[2,2],[3,2],[4,3]][S.level]||[3,2];
+  const art=album.length&&Math.random()<.5?album[rnd(album.length)]:null,p=art?PICS.find(x=>x.id===art.id)||PICS[0]:PICS[rnd(PICS.length)];
+  const mk=()=>art?thumbFrom(p,art.f||{},art.pt||{},art.st||[],false):thumb(p);
   const g=$('game');g.innerHTML='<div class="pz"><div class="pz-frame"></div></div>';
   const box=g.querySelector('.pz'),frame=box.querySelector('.pz-frame');
-  const ghost=thumb(p);ghost.classList.add('pz-ghost');ghost.style.opacity=[.4,.25,.14][S.level];frame.appendChild(ghost);
+  const ghost=mk();ghost.classList.add('pz-ghost');ghost.style.opacity=[.4,.25,.14][S.level];frame.appendChild(ghost);
   for(let i=0;i<C*R;i++)frame.insertAdjacentHTML('beforeend','<i class="pz-slot"></i>');
   frame.style.gridTemplateColumns=`repeat(${C},1fr)`;frame.style.gridTemplateRows=`repeat(${R},1fr)`;
   const pieces=[];
   for(let r=0;r<R;r++)for(let c=0;c<C;c++){
-    const el=document.createElement('div');el.className='pz-piece';const sv=thumb(p);
+    const el=document.createElement('div');el.className='pz-piece';const sv=mk();
     sv.setAttribute('viewBox',`${c*400/C} ${r*400/R} ${400/C} ${400/R}`);sv.setAttribute('preserveAspectRatio','none');el.appendChild(sv);box.appendChild(el);
     const pc={el,c,r,fx:0,fy:0,placed:false};pieces.push(pc);dragPiece(pc);
   }
-  pz={p,C,R,pieces,box,frame,left:C*R};
-  layoutPuzzle(true);setScore(S.pstars||0);speak('퍼즐을 맞춰요!');
+  pz={p,C,R,pieces,box,frame,left:C*R,mk};
+  layoutPuzzle(true);setScore(S.pstars||0);speak(art?'내가 칠한 '+p.name+' 퍼즐이에요!':'퍼즐을 맞춰요!');
 }
 function pzGeom(){
   const W=pz.box.clientWidth,H=pz.box.clientHeight,port=H>W;
@@ -1086,7 +1115,7 @@ function dragPiece(q){
   q.el.addEventListener('pointerup',up);q.el.addEventListener('pointercancel',up);
 }
 function puzzleDone(){
-  const p=pz.p;later(()=>{const full=thumb(p);full.classList.add('alive','pz-full');pz.frame.appendChild(full);pz.pieces.forEach(q=>q.el.remove())},350);
+  const p=pz.p;later(()=>{const full=pz.mk();full.classList.add('alive','pz-full');pz.frame.appendChild(full);pz.pieces.forEach(q=>q.el.remove())},350);
   speak(p.name+' 퍼즐 완성! '+(p.cheer||''));if(VSFX[p.id])later(VSFX[p.id],900);gameDone('퍼즐 완성!','pstars',p);
 }
 
@@ -1137,6 +1166,135 @@ function markRegion(sv,id){
   const c=new DOMPoint(r.left+r.width/2,r.top+r.height/2).matrixTransform(inv),e2=new DOMPoint(r.right,r.bottom).matrixTransform(inv);
   const rad=Math.max(22,Math.min(110,Math.max(e2.x-c.x,e2.y-c.y)+10));
   sv.insertAdjacentHTML('beforeend',`<circle class="mark" cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${rad.toFixed(1)}"/>`);
+}
+
+/* 탈것 손놀이 공통 */
+const WHEELED=()=>PICS.filter(p=>/class="wheel"/.test(p.svg)&&p.id!=='roller');
+const pick=a=>a[rnd(a.length)];
+function setSteps(names,i){$('dots').hidden=false;$('dots').innerHTML='<b class="gstar steps-ind">'+names.map((n,k)=>k===i?`<b>${n}</b>`:`<span>${n}</span>`).join(' › ')+'</b>'}
+function carGroup(sv){return sv.querySelector(':scope > g:not(.fx):not(.scene)')}
+function svgEl(tag,attrs){const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e}
+function dragToken(el,onDrop){
+  let ox=0,oy=0,on=false,home=null;
+  el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}
+    const r=el.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;on=true;home=home||{l:el.style.left,t:el.style.top};
+    el.classList.add('drag');el.style.transition='none';el.style.zIndex=50;tone(520,.05,0,.1)});
+  el.addEventListener('pointermove',e=>{if(!on)return;const b=el.offsetParent.getBoundingClientRect();el.style.left=(e.clientX-b.left-ox)+'px';el.style.top=(e.clientY-b.top-oy)+'px'});
+  const up=()=>{if(!on)return;on=false;el.classList.remove('drag');const r=el.getBoundingClientRect();
+    if(!onDrop(r.left+r.width/2,r.top+r.height/2)){el.style.transition='left .3s,top .3s';el.style.left=home.l;el.style.top=home.t;tone(300,.08,0,.1)}};
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+}
+
+/* 세차장: 진흙 → 거품 → 헹구기 → 반짝 */
+let wash=null;
+const WASH_STEPS=['진흙 닦기','거품','헹구기','반짝'];
+function startWash(){
+  done.hidden=true;const p=pick(WHEELED()),g=$('game');g.innerHTML='<div class="stagebox"></div>';
+  const sv=thumb(p);g.querySelector('.stagebox').appendChild(sv);const bb=carGroup(sv).getBBox();
+  const fx=svgEl('g',{class:'washfx'});sv.appendChild(fx);
+  const muds=[];for(let i=0;i<16;i++){const x=bb.x+18+Math.random()*(bb.width-36),y=bb.y+14+Math.random()*(bb.height-28),r=15+Math.random()*16;
+    const el=svgEl('path',{class:'mud',d:`M${x-r} ${y} q${r*.2} ${-r*1.1} ${r} ${-r*.9} q${r*1.2} ${-r*.1} ${r} ${r*.9} q${-r*.1} ${r} ${-r} ${r*.9} q${-r*.9} ${r*.1} ${-r} ${-r*.9}z`});
+    fx.appendChild(el);muds.push({el,x,y,r,on:true})}
+  wash={p,sv,fx,bb,stage:0,muds,left:muds.length,bubs:[],made:0,need:34,last:0,down:false};
+  setSteps(WASH_STEPS,0);later(()=>speak(p.name+'가 진흙투성이예요! 손가락으로 쓱쓱 문질러요!'),300);
+  sv.addEventListener('pointerdown',e=>{e.preventDefault();wash.down=true;try{sv.setPointerCapture(e.pointerId)}catch(_){}washAt(e)});
+  sv.addEventListener('pointermove',e=>{if(wash&&wash.down)washAt(e)});
+  ['pointerup','pointercancel'].forEach(t=>sv.addEventListener(t,()=>{if(wash)wash.down=false}));
+}
+function washAt(e){
+  const w=wash;if(!w||w.stage>2)return;const pt=toLocal(w.sv,e),now=performance.now();
+  if(w.stage===0){w.muds.forEach(m=>{if(m.on&&Math.hypot(pt.x-m.x,pt.y-m.y)<m.r+24){m.on=false;m.el.classList.add('gone');w.left--;burst(e.clientX,e.clientY,'#8B5A2B',5);tone(260+Math.random()*200,.05,0,.1)}});
+    if(w.left===0){w.stage=1;setSteps(WASH_STEPS,1);tone(660,.15,0,.16);speak('잘했어요! 이번엔 비누 거품을 만들어요! 쓱쓱!')}}
+  else if(w.stage===1){const b=w.bb;if(pt.x<b.x-20||pt.x>b.x+b.width+20||pt.y<b.y-30||pt.y>b.y+b.height+20||now-w.last<45)return;w.last=now;
+    const c=svgEl('circle',{class:'bub',cx:pt.x+(Math.random()-.5)*30,cy:pt.y+(Math.random()-.5)*30,r:8+Math.random()*12});w.fx.appendChild(c);w.bubs.push(c);
+    if(++w.made%4===0)tone(700+Math.random()*400,.04,0,.08);
+    if(w.made>=w.need){w.stage=2;setSteps(WASH_STEPS,2);tone(660,.15,0,.16);speak('보글보글! 이제 물로 헹궈요! 손가락으로 물을 뿌려요!')}}
+  else if(w.stage===2){if(now-w.last>60){w.last=now;const d=svgEl('ellipse',{class:'drop',cx:pt.x+(Math.random()-.5)*24,cy:pt.y,rx:5,ry:9});w.fx.appendChild(d);later(()=>d.remove(),700);if(Math.random()<.3)tone(900+Math.random()*300,.03,0,.06)}
+    w.bubs=w.bubs.filter(c=>{const dx=+c.getAttribute('cx')-pt.x,dy=+c.getAttribute('cy')-pt.y;if(Math.hypot(dx,dy)<46){c.classList.add('pop');later(()=>c.remove(),300);return false}return true});
+    if(!w.bubs.length)washDone()}
+}
+function washDone(){
+  const w=wash;w.stage=3;setSteps(WASH_STEPS,3);const b=w.bb;
+  for(let i=0;i<9;i++){const x=b.x+Math.random()*b.width,y=b.y+Math.random()*b.height;const st=svgEl('path',{class:'spark',d:starD(x,y,14,5)});st.style.animationDelay=(i*.12)+'s';w.fx.appendChild(st)}
+  w.sv.classList.add('alive');speak('반짝반짝! '+w.p.name+'가 깨끗해졌어요!');if(VSFX[w.p.id])later(VSFX[w.p.id],900);gameDone('반짝반짝 깨끗해!','wstars',w.p);
+}
+
+/* 정비소: 바퀴 끼우기 → 기름 넣기 → 출발 */
+let gar=null;
+const GAR_STEPS=['바퀴 끼우기','기름 넣기','출발'];
+const TIRE='<svg viewBox="-50 -50 100 100"><circle r="46" fill="#3A3A48" stroke="#2B2D42" stroke-width="6"/><circle r="17" fill="#D3C0F5" stroke="#2B2D42" stroke-width="5"/><path d="M0 -42 L0 -20" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>';
+const NOZZLE='<svg viewBox="0 0 100 100"><rect x="8" y="34" width="54" height="34" rx="10" fill="#F2545B" stroke="#2B2D42" stroke-width="6"/><path d="M62 44 L92 40 L92 52 L62 58 Z" fill="#3A3A48" stroke="#2B2D42" stroke-width="5" stroke-linejoin="round"/><path d="M20 68 Q10 92 30 96" fill="none" stroke="#2B2D42" stroke-width="7" stroke-linecap="round"/></svg>';
+function startGarage(){
+  done.hidden=true;const p=pick(WHEELED().filter(x=>(x.svg.match(/class="wheel"/g)||[]).length<=3)),g=$('game');
+  g.innerHTML='<div class="garage"><div class="stagebox"></div><div class="tray"></div></div>';
+  const sv=thumb(p),wrap=g.querySelector('.garage');wrap.querySelector('.stagebox').appendChild(sv);
+  const wheels=[...sv.querySelectorAll('g.wheel')].map(gw=>{const c=gw.querySelector('circle.r');const w={g:gw,cx:+c.getAttribute('cx'),cy:+c.getAttribute('cy'),r:+c.getAttribute('r'),done:false};
+    gw.style.opacity=0;w.slot=svgEl('circle',{class:'slot',cx:w.cx,cy:w.cy,r:w.r});sv.appendChild(w.slot);return w});
+  gar={p,sv,wrap,wheels,left:wheels.length,stage:0};
+  setSteps(GAR_STEPS,0);later(()=>{layoutTires();speak(p.name+' 바퀴가 빠졌어요! 바퀴를 끌어다 끼워요!')},200);
+}
+function layoutTires(){
+  const tray=gar.wrap.querySelector('.tray'),scale=gar.sv.getBoundingClientRect().width/400;
+  gar.wheels.forEach((w,i)=>{const t=document.createElement('div');t.className='token';const size=Math.max(56,w.r*2*scale);
+    Object.assign(t.style,{width:size+'px',height:size+'px',left:`calc(${(i+1)*100/(gar.wheels.length+1)}% - ${size/2}px)`,top:`calc(50% - ${size/2}px)`});
+    t.innerHTML=TIRE;tray.appendChild(t);
+    dragToken(t,(x,y)=>{const m=gar.sv.getScreenCTM();const hit=gar.wheels.find(q=>{if(q.done)return false;const c=new DOMPoint(q.cx,q.cy).matrixTransform(m);return Math.hypot(c.x-x,c.y-y)<q.r*m.a*1.3});
+      if(!hit)return false;hit.done=true;t.remove();hit.slot.remove();hit.g.style.opacity=1;hit.g.classList.remove('jiggle');void hit.g.getBoundingClientRect();hit.g.classList.add('jiggle');
+      tone(660,.12,0,.18);const c=new DOMPoint(hit.cx,hit.cy).matrixTransform(m);burst(c.x,c.y,'#FFC93C',12);
+      if(--gar.left===0)later(fuelStage,600);return true});
+  });
+}
+function fuelStage(){
+  gar.stage=1;setSteps(GAR_STEPS,1);const tray=gar.wrap.querySelector('.tray');tray.innerHTML='<div class="gauge"><i></i></div>';
+  const t=document.createElement('div');t.className='token nozzle';Object.assign(t.style,{width:'90px',height:'90px',left:'calc(15% - 45px)',top:'calc(50% - 45px)'});t.innerHTML=NOZZLE;tray.appendChild(t);
+  speak('이번엔 주유기를 끌어다 자동차에 꽂아요!');
+  dragToken(t,(x,y)=>{const r=carGroup(gar.sv).getBoundingClientRect();if(x<r.left-20||x>r.right+20||y<r.top-20||y>r.bottom+20)return false;
+    t.classList.add('docked');const gi=tray.querySelector('.gauge i');let k=0;speak('꼴깍꼴깍, 기름 넣는 중!');
+    const step=()=>{k++;gi.style.width=(k*10)+'%';tone(300+k*40,.08,0,.12);if(k<10)later(step,240);else later(garageDone,300)};later(step,300);return true});
+}
+function garageDone(){
+  gar.stage=2;setSteps(GAR_STEPS,2);gar.wrap.querySelector('.tray').innerHTML='';gar.sv.classList.add('alive');
+  speak('정비 끝! 부릉부릉 출발!');horn();gameDone('정비 끝! 출발!','gstars2',gar.p);
+}
+
+/* 운전하기: 길 따라 끌기, 빨간불엔 멈춤, 차고 도착 */
+let drv=null;
+function startDrive(){
+  done.hidden=true;const p=pick(WHEELED()),g=$('game');
+  g.innerHTML=`<div class="stagebox"><svg class="pic drive" viewBox="0 0 800 450" data-uid="${++uid}">
+    <rect width="800" height="450" rx="22" fill="#B8E986"/>
+    <g class="deco"><circle cx="130" cy="90" r="34" fill="#5BC27A" stroke="#2B2D42" stroke-width="5"/><rect x="124" y="120" width="12" height="30" fill="#A8714A" stroke="#2B2D42" stroke-width="4"/>
+     <circle cx="470" cy="80" r="28" fill="#5BC27A" stroke="#2B2D42" stroke-width="5"/><rect x="465" y="104" width="10" height="26" fill="#A8714A" stroke="#2B2D42" stroke-width="4"/>
+     <circle cx="300" cy="400" r="26" fill="#5BC27A" stroke="#2B2D42" stroke-width="5"/><circle cx="640" cy="390" r="30" fill="#5BC27A" stroke="#2B2D42" stroke-width="5"/>
+     <path d="M230 70 L270 40 L310 70 L310 110 L230 110 Z" fill="#FF8FC1" stroke="#2B2D42" stroke-width="5" stroke-linejoin="round"/></g>
+    <path id="road" d="M50 360 C190 370 210 240 330 240 S470 330 540 230 S650 110 712 120" fill="none" stroke="#6B7280" stroke-width="78" stroke-linecap="round"/>
+    <path d="M50 360 C190 370 210 240 330 240 S470 330 540 230 S650 110 712 120" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="18 16"/>
+    <g class="garage-house"><path d="M690 70 L740 36 L790 70 L790 150 L690 150 Z" fill="#FFD93D" stroke="#2B2D42" stroke-width="5" stroke-linejoin="round"/><rect x="708" y="92" width="64" height="58" fill="#fff" stroke="#2B2D42" stroke-width="5"/></g>
+    <g class="tlight"></g><g class="carwrap"></g></svg></div>`;
+  const ds=g.querySelector('svg.drive'),road=ds.querySelector('#road'),L=road.getTotalLength(),N=220;
+  const pts=[...Array(N).keys()].map(i=>{const q=road.getPointAtLength(L*i/(N-1));return{x:q.x,y:q.y}});
+  const stop=Math.round(N*.52),sp=pts[stop],sp2=pts[stop+3],nx=-(sp2.y-sp.y),ny=sp2.x-sp.x,nl=Math.hypot(nx,ny)||1,lx=sp.x+nx/nl*70,ly=sp.y+ny/nl*70;
+  ds.querySelector('.tlight').innerHTML=`<rect x="${lx-4}" y="${ly}" width="8" height="46" fill="#3A3A48"/><rect x="${lx-18}" y="${ly-62}" width="36" height="66" rx="10" fill="#3A3A48" stroke="#2B2D42" stroke-width="4"/>
+    <circle class="lr" cx="${lx}" cy="${ly-44}" r="10" fill="#F2545B"/><circle class="lg" cx="${lx}" cy="${ly-16}" r="10" fill="#4B5563"/>`;
+  const car=thumb(p);car.classList.add('noscene');car.setAttribute('width',150);car.setAttribute('height',150);car.setAttribute('x',-75);car.setAttribute('y',-112);
+  const cw=ds.querySelector('.carwrap');cw.appendChild(car);
+  drv={p,ds,pts,N,cur:0,stop,red:true,waiting:false,down:false,cw,lastTone:0};
+  placeCar();setSteps(['출발','신호등','도착'],0);later(()=>speak('길을 따라 '+p.name+'를 운전해요! 손가락으로 끌어요!'),300);
+  ds.addEventListener('pointerdown',e=>{e.preventDefault();drv.down=true;try{ds.setPointerCapture(e.pointerId)}catch(_){}driveAt(e)});
+  ds.addEventListener('pointermove',e=>{if(drv&&drv.down)driveAt(e)});
+  ['pointerup','pointercancel'].forEach(t=>ds.addEventListener(t,()=>{if(drv)drv.down=false}));
+}
+function placeCar(){const d=drv,a=d.pts[d.cur],b=d.pts[Math.min(d.N-1,d.cur+3)],ang=Math.max(-28,Math.min(28,Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI));
+  d.cw.setAttribute('transform',`translate(${a.x} ${a.y}) rotate(${ang})`)}
+function driveAt(e){
+  const d=drv;if(!d||d.cur>=d.N-1)return;const pt=toLocal(d.ds,e);
+  let best=-1,bd=1e9;for(let i=d.cur;i<Math.min(d.N,d.cur+22);i++){const q=d.pts[i],dist=Math.hypot(q.x-pt.x,q.y-pt.y);if(dist<bd){bd=dist;best=i}}
+  if(bd>90||best<=d.cur)return;
+  if(d.red&&best>=d.stop-2){best=d.stop-2;if(!d.waiting){d.waiting=true;setSteps(['출발','신호등','도착'],1);speak('빨간불이에요! 멈춰요!');tone(440,.2,0,.15);
+    later(()=>{d.red=false;d.ds.querySelector('.lr').setAttribute('fill','#4B5563');d.ds.querySelector('.lg').setAttribute('fill','#5BC27A');speak('초록불! 출발!');tone(784,.2,0,.16)},2000)}}
+  if(best<=d.cur)return;d.cur=best;placeCar();
+  if(d.cur-d.lastTone>5){d.lastTone=d.cur;tone(90+d.cur%3*12,.08,0,.14)}
+  if(d.cur>=d.N-2){setSteps(['출발','신호등','도착'],2);d.cw.classList.add('parked');speak('도착! 차고에 쏙!');if(VSFX[d.p.id])later(VSFX[d.p.id],500);gameDone('도착!','rstars',d.p)}
 }
 
 /* 내 그림첩 보기 */
@@ -1306,7 +1464,7 @@ function render(){
   const game=$('game');game.hidden=true;game.innerHTML='';clearTimers();
   const isGame=GAME_MODES.includes(S.mode);document.querySelector('.app').classList.toggle('game',isGame);
   if(isGame){done.hidden=true;$('picName').textContent=GAME_TITLE[S.mode];document.querySelector('.hint').textContent=GAME_HINT[S.mode];
-    game.hidden=false;({quiz:startQuiz,match:startMatch,book:showBooks,album:showAlbum,puzzle:startPuzzle,shadow:startShadow,spot:startSpot})[S.mode]();syncTools();return}
+    game.hidden=false;({quiz:startQuiz,match:startMatch,book:showBooks,album:showAlbum,puzzle:startPuzzle,shadow:startShadow,spot:startSpot,wash:startWash,garage:startGarage,drive:startDrive})[S.mode]();syncTools();return}
   if(draw){$('picName').textContent='자유 그리기';done.hidden=true;sizePaper();syncTools();return}
   const p=PICS[S.pic];
   board.insertAdjacentHTML('afterbegin',makeSvg(p));
@@ -1558,6 +1716,9 @@ function openPicker(){
   const box=$('picks');box.innerHTML='<h3 class="psec">놀이</h3>';
   const MODES=[['quiz','소리 맞히기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF1EC"/><path d="M100 160 L150 160 L214 108 L214 292 L150 240 L100 240 Z" fill="#FF7A59"/><path d="M252 150 Q288 200 252 250 M290 116 Q350 200 290 284" fill="none" stroke="#FF7A59" stroke-width="22" stroke-linecap="round"/></svg>'],
     ['match','짝 맞추기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F1F7FC"/><g transform="rotate(-8 120 200)"><rect x="50" y="90" width="140" height="210" rx="24" fill="#FF7A59"/><text x="120" y="226" font-size="96" text-anchor="middle" fill="#fff" font-family="sans-serif">?</text></g><g transform="rotate(8 280 200)"><rect x="210" y="90" width="140" height="210" rx="24" fill="#fff" stroke="#2B2D42" stroke-width="10"/><circle cx="280" cy="195" r="42" fill="#FFD93D" stroke="#2B2D42" stroke-width="8"/></g></svg>'],
+    ['wash','세차장','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#EAF6FF"/><g stroke="#2B2D42" stroke-width="9" stroke-linejoin="round"><path d="M60 250 L60 222 Q64 206 88 202 L120 202 L150 150 Q155 142 164 142 L246 142 Q254 142 260 150 L286 202 L314 202 Q338 206 344 228 L344 250 Q344 262 330 262 L74 262 Q60 262 60 250 Z" fill="#F2545B"/><circle cx="122" cy="262" r="28" fill="#3A3A48"/><circle cx="282" cy="262" r="28" fill="#3A3A48"/></g><g fill="#fff" stroke="#9CC9E8" stroke-width="5"><circle cx="110" cy="120" r="22"/><circle cx="150" cy="96" r="14"/><circle cx="300" cy="110" r="18"/><circle cx="250" cy="300" r="16"/><circle cx="170" cy="310" r="12"/></g></svg>'],
+    ['garage','정비소','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF6E5"/><g stroke="#2B2D42" stroke-width="9" stroke-linejoin="round"><circle cx="150" cy="230" r="72" fill="#3A3A48"/><circle cx="150" cy="230" r="28" fill="#D3C0F5"/><path d="M250 120 L330 120 L330 300 L250 300 Z" fill="#F2545B"/><rect x="266" y="140" width="48" height="36" fill="#FFD93D"/><path d="M330 200 Q360 210 352 260" fill="none"/></g></svg>'],
+    ['drive','운전하기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#B8E986"/><path d="M60 320 C150 330 140 200 220 200 S300 120 340 90" fill="none" stroke="#6B7280" stroke-width="56" stroke-linecap="round"/><path d="M60 320 C150 330 140 200 220 200 S300 120 340 90" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="14 12"/><rect x="290" y="140" width="34" height="62" rx="9" fill="#3A3A48" stroke="#2B2D42" stroke-width="5"/><circle cx="307" cy="158" r="9" fill="#F2545B"/><circle cx="307" cy="184" r="9" fill="#5BC27A"/></svg>'],
     ['puzzle','조각 퍼즐','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#EEF6FF"/><g stroke="#2B2D42" stroke-width="10" stroke-linejoin="round"><path d="M70 70 H190 V115 a25 25 0 1 1 0 50 V190 H70 Z" fill="#FF7A59"/><path d="M210 70 H330 V190 H285 a25 25 0 1 0 -50 0 H210 Z" fill="#FFD93D"/><path d="M70 210 H115 a25 25 0 1 0 50 0 H190 V330 H70 Z" fill="#6EC6F0"/><path d="M210 210 H330 V330 H210 V285 a25 25 0 1 1 0 -50 Z" fill="#5BC27A"/></g></svg>'],
     ['shadow','그림자 찾기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F3F0FF"/><g transform="translate(-20 30) scale(.62)"><path d="M48 248 L48 210 Q52 192 80 188 L112 188 L146 126 Q151 118 161 118 L259 118 Q269 118 275 126 L306 188 L330 188 Q356 192 362 216 L362 248 Q362 264 346 264 L64 264 Q48 264 48 248 Z" fill="#3A3A48"/><circle cx="122" cy="264" r="34" fill="#3A3A48"/><circle cx="290" cy="264" r="34" fill="#3A3A48"/></g><g transform="translate(140 150) scale(.58)" stroke="#2B2D42" stroke-width="10"><path d="M48 248 L48 210 Q52 192 80 188 L112 188 L146 126 Q151 118 161 118 L259 118 Q269 118 275 126 L306 188 L330 188 Q356 192 362 216 L362 248 Q362 264 346 264 L64 264 Q48 264 48 248 Z" fill="#F2545B"/><circle cx="122" cy="264" r="34" fill="#FFD93D"/><circle cx="290" cy="264" r="34" fill="#FFD93D"/></g></svg>'],
     ['spot','다른 곳 찾기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF4EC"/><rect x="50" y="110" width="140" height="180" rx="16" fill="#fff" stroke="#2B2D42" stroke-width="10"/><rect x="210" y="110" width="140" height="180" rx="16" fill="#fff" stroke="#2B2D42" stroke-width="10"/><circle cx="120" cy="200" r="34" fill="#6EC6F0" stroke="#2B2D42" stroke-width="8"/><circle cx="280" cy="200" r="34" fill="#FF8FC1" stroke="#2B2D42" stroke-width="8"/><circle cx="280" cy="200" r="54" fill="none" stroke="#F2545B" stroke-width="10"/></svg>'],
@@ -1583,7 +1744,7 @@ $('tPick').addEventListener('click',()=>{openPicker();tone(480)});
 $('pClose').addEventListener('click',()=>{picker.hidden=true});
 picker.addEventListener('click',e=>{if(e.target===picker)picker.hidden=true});
 onTap($('again'),()=>{const p=PICS[S.pic];S.fills[p.id]={};S.paints[p.id]={};S.pdone[p.id]=[];S.stickers[p.id]=[];stacks[p.id]=[];save();render();speak('새로 칠해요! 그림첩에 그대로 있어요.');tone(600)});
-onTap($('next'),()=>{const RE={match:startMatch,puzzle:startPuzzle,spot:startSpot}[S.mode];if(RE){done.hidden=true;clearTimers();RE();return}S.pic=(S.pic+1)%PICS.length;save();render();if(S.level!==2)speak(PICS[S.pic].name);tone(520)});
+onTap($('next'),()=>{const RE={match:startMatch,puzzle:startPuzzle,spot:startSpot,wash:startWash,garage:startGarage,drive:startDrive}[S.mode];if(RE){done.hidden=true;clearTimers();RE();return}S.pic=(S.pic+1)%PICS.length;save();render();if(S.level!==2)speak(PICS[S.pic].name);tone(520)});
 
 /* 어른 설정: 제목을 2초 꾹 */
 const settings=$('settings');
@@ -1623,7 +1784,7 @@ buildPalette();buildTray();render();
   addEventListener('appinstalled',()=>{btn.hidden=true});
   if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   /* 새 버전 확인: 앱이 열리거나 다시 화면에 나올 때 */
-  const APP_V="9";
+  const APP_V="10";
   function checkUpdate(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
       if(!j||j.v===APP_V)return;
