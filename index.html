@@ -282,6 +282,31 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .pnum{font-size:18px;color:var(--muted)}
 .psec{grid-column:1/-1;margin:6px 4px 0;font-weight:400;font-size:18px;color:var(--muted)}
 @media (orientation:portrait){.choices.n4{--n:2}.blist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* 칠하는 방법 전환 · 스티커 · 무늬 */
+.seg{display:flex;background:#fff;border-radius:16px;padding:4px;gap:4px;box-shadow:0 4px 0 var(--tool-shadow);margin-left:auto;flex:none}
+.seg button{display:flex;align-items:center;gap:5px;border-radius:12px;padding:6px 12px;font-size:17px;min-height:42px}
+.seg svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg:not([hidden])~.dots{margin-left:12px}
+.stk-tray{display:flex;gap:6px;flex-wrap:wrap}
+.stkb{width:46px;height:46px;border-radius:14px;background:#fff;box-shadow:0 3px 0 var(--tool-shadow);display:grid;place-items:center}
+.stkb svg{width:36px;height:36px}
+.stkb[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:1px}
+.swatch.pat{background-color:#fff}
+.app.drawmode .swatch.pat{display:none}
+.board{touch-action:none}
+.pic .paint{pointer-events:none}
+.pic .paint path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.pic .outline .line{stroke-width:6}
+.pic .stickers{pointer-events:none}
+.app.stkmode .pic .stickers{pointer-events:auto}
+.stkpop{animation:stkin .35s ease-out;transform-box:fill-box;transform-origin:center}
+@keyframes stkin{from{transform:scale(0)}70%{transform:scale(1.2)}}
+.done .again{background:rgba(255,255,255,.18);color:#fff}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;width:100%;align-self:stretch;align-content:start}
+.agrid .bcover small{display:block;font-size:14px;color:var(--muted)}
+.empty-note{font-size:24px;color:var(--muted);text-align:center;line-height:1.6}
+@media (orientation:portrait){.seg button span{display:none}.seg button{padding:6px 10px}}
 /* 길게 누르는 버튼: 크롬 기본 메뉴가 끼어들지 않게 */
 .tool,#picName{touch-action:none;-webkit-touch-callout:none}
 .toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:3;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-size:18px;white-space:nowrap;animation:rise .25s ease-out}
@@ -342,6 +367,12 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
   <main class="stage">
     <div class="topbar">
       <div><h1 id="picName" style="display:inline">물고기</h1><span class="hint">색을 고르고 그림을 콕!</span><span class="mission" id="mission" hidden><i id="mColor"></i><span>반짝이는 곳!</span><span class="stars" id="stars">★ 0</span></span></div>
+      <div class="seg" id="seg" role="group" aria-label="칠하는 방법">
+        <button type="button" data-m="fill" aria-label="콕 채우기"><svg viewBox="0 0 24 24"><path d="M5 11l7-7 7 7-7 7z"/><path d="M19 15c0 1.7 1 2.6 1 3.5a1.5 1.5 0 0 1-3 0c0-.9 1-1.8 2-3.5z"/></svg><span>콕</span></button>
+        <button type="button" data-m="brush" aria-label="쓱쓱 붓"><svg viewBox="0 0 24 24"><path d="M18 3l3 3-9 9-3-3z"/><path d="M9 12c-3 0-5 2-5 5 0 1-1 2-2 2 2 2 7 2 9-1 1-1.5 1-3.5-2-6z"/></svg><span>쓱쓱</span></button>
+        <button type="button" data-m="sticker" aria-label="스티커"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span>스티커</span></button>
+      </div>
+      <div class="stk-tray" id="stkTray" hidden role="group" aria-label="스티커 고르기"></div>
       <div class="dots" id="dots" aria-hidden="true"></div>
       <div class="brush" id="brush" hidden role="group" aria-label="붓 굵기">
         <button class="bsz" type="button" data-s="0" aria-label="가는 붓"><i style="--d:10px"></i></button>
@@ -357,7 +388,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
       <canvas id="paper" hidden></canvas>
       <div class="toast" id="toast" hidden></div>
       <div id="game" hidden></div>
-      <div class="done" id="done" hidden><span id="doneText">다 칠했어요!</span> <button id="next" type="button">다음 그림 ▶</button></div>
+      <div class="done" id="done" hidden><span id="doneText">다 칠했어요!</span> <button id="again" class="again" type="button">새로 칠하기</button><button id="next" type="button">다음 그림 ▶</button></div>
     </div>
   </main>
 
@@ -725,10 +756,11 @@ PICS.forEach(p=>{
 });
 {const ORDER=['car','train','bus','fire','police','ambulance','dump','digger','mixer','crane','forklift','tractor','moto','plane','heli','boat','sub','rocket','fish','butterfly','flower','cat','dino','whale','rabbit','duck'];PICS.sort((a,b)=>ORDER.indexOf(a.id)-ORDER.indexOf(b.id))}
 const KEY='colorplay.v1',DKEY='colorplay.draw';
-let S={pic:0,color:0,eraser:false,sound:true,fills:{},mode:'color',size:1,rainbow:false,level:1,stars:0,guide:0};
+let S={pic:0,color:0,eraser:false,sound:true,fills:{},mode:'color',size:1,rainbow:false,level:1,stars:0,guide:0,paint:'fill',pat:null,paints:{},pdone:{},stickers:{},stk:'star'};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'));S.eraser=false}catch(e){}
 if(S.pic>=PICS.length)S.pic=0;
 if(S.audio===undefined)S.audio=S.sound===false?0:2;
+['paints','pdone','stickers'].forEach(k=>{if(!S[k]||typeof S[k]!=='object')S[k]={}});if(!['fill','brush','sticker'].includes(S.paint))S.paint='fill';
 const stacks={};
 const save=()=>{try{const{eraser,...k}=S;localStorage.setItem(KEY,JSON.stringify(k))}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -791,9 +823,9 @@ function whistle(){tone(880,.5,0,.12);tone(1046,.5,0,.08)}
 const VSFX={ambulance:siren,mixer:horn,crane:horn,forklift:()=>{tone(1000,.12,0,.1);tone(1000,.12,.3,.1)},moto:()=>{for(let i=0;i<8;i++)tone(80+i*12,.1,i*.09,.2)},sub:()=>{for(let i=0;i<6;i++)tone(400+Math.random()*300,.06,i*.12,.1)},car:horn,bus:horn,dump:horn,digger:horn,tractor:horn,fire:siren,police:siren,train:whistle,boat:()=>{tone(147,.9,0,.18);tone(196,.9,0,.1)},rocket:()=>{tone(160,1,0,.16);tone(220,1,.15,.1)},duck:()=>{tone(620,.1,0,.14);tone(620,.1,.18,.14)}};
 
 /* 놀이 공통 */
-const GAME_MODES=['quiz','match','book'];
-const GAME_TITLE={quiz:'소리 맞히기',match:'짝 맞추기',book:'그림책'};
-const GAME_HINT={quiz:'소리를 듣고 그림을 콕!',match:'똑같은 그림 두 장을 찾아요',book:'책장을 넘겨요'};
+const GAME_MODES=['quiz','match','book','album'];
+const GAME_TITLE={quiz:'소리 맞히기',match:'짝 맞추기',book:'그림책',album:'내 그림첩'};
+const GAME_HINT={quiz:'소리를 듣고 그림을 콕!',match:'똑같은 그림 두 장을 찾아요',book:'책장을 넘겨요',album:'내가 칠한 그림이 모여 있어요'};
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const AUTO=['#F2545B','#FFD93D','#FF9F43','#5BC27A','#9B6BE0','#FF8FC1','#3D7BE0','#A8714A'];
@@ -804,10 +836,15 @@ function autoColor(id,i,k){
   if(/Win|win|Front|Cock|Rear/.test(id))return '#BFE6FA';
   return AUTO[(i*3+k)%AUTO.length];
 }
-function thumb(p){
-  const d=document.createElement('div');d.innerHTML=makeSvg(p);const sv=d.firstElementChild;const f=S.fills[p.id]||{};
-  regIds(p).forEach((id,i)=>{const el=sv.querySelector(`[data-id="${id}"]`);el.style.fill=f[id]||autoColor(id,i,p.id.length);el.style.cursor='default'});
+function thumbFrom(p,f,P,st,auto){
+  const d=document.createElement('div');d.innerHTML=makeSvg(p);const sv=d.firstElementChild;
+  regIds(p).forEach((id,i)=>{const el=sv.querySelector(`[data-id="${id}"]`);
+    el.style.fill=f[id]?paintRef(sv,f[id],false):(auto&&!(P[id]&&P[id].length)?autoColor(id,i,p.id.length):'');el.style.cursor='default'});
+  Object.entries(P||{}).forEach(([id,list])=>(list||[]).forEach(x=>{if(sv.querySelector(`[data-id="${id}"]`))drawStroke(sv,id,x)}));
+  renderStickers(sv,st||[],false);
   return sv;
+}
+function thumb(p){return thumbFrom(p,S.fills[p.id]||{},S.paints[p.id]||{},S.stickers[p.id]||[],true)
 }
 const SPK='<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 function setScore(n){$('dots').hidden=false;$('dots').innerHTML=`<b class="gstar">★ ${n}</b>`}
@@ -864,7 +901,7 @@ function flipCard(b,p){
     [a,b].forEach(x=>{x.classList.add('matched');x.querySelector('svg').classList.add('alive')});
     match.left--;tone(784,.15,.1,.2);speak(p.name+'!');if(VSFX[p.id])later(VSFX[p.id],600);
     if(!match.left){S.mstars=(S.mstars||0)+1;save();setScore(S.mstars);
-      later(()=>{confetti();speak('우와! 다 찾았어요!');$('doneText').textContent='다 찾았어요!';$('next').textContent='한 번 더 ▶';done.hidden=false},1000)}
+      later(()=>{confetti();speak('우와! 다 찾았어요!');$('doneText').textContent='다 찾았어요!';$('next').textContent='한 번 더 ▶';$('again').hidden=true;done.hidden=false},1000)}
   }else{match.lock=true;later(()=>{a.classList.remove('open');b.classList.remove('open');match.lock=false},1000)}
 }
 function layoutGame(){
@@ -926,6 +963,28 @@ function readPage(text){
   later(()=>spans.forEach(x=>x.classList.remove('on')),t+300);
 }
 
+/* 내 그림첩 보기 */
+const artOf=a=>{const p=PICS.find(x=>x.id===a.id);return p?thumbFrom(p,a.f||{},a.pt||{},a.st||[],false):null};
+const dateOf=t=>{const d=new Date(t);return`${d.getMonth()+1}월 ${d.getDate()}일`};
+function showAlbum(){
+  clearTimers();const g=$('game');$('dots').hidden=false;$('dots').innerHTML=`<b class="gstar">${album.length}장</b>`;
+  if(!album.length){g.innerHTML='<p class="empty-note">아직 그림이 없어요.<br>그림을 다 칠하면 여기에 모여요!</p>';return}
+  g.innerHTML='<div class="agrid"></div>';const box=g.querySelector('.agrid');
+  album.slice().reverse().forEach((a,k)=>{const p=PICS.find(x=>x.id===a.id),sv=artOf(a);if(!sv)return;
+    const b=document.createElement('button');b.type='button';b.className='bcover';b.appendChild(sv);
+    b.insertAdjacentHTML('beforeend',`<span>${p.name}<small>${dateOf(a.t)}</small></span>`);onTap(b,()=>{tone(520);showArt(k)});box.appendChild(b)});
+}
+function showArt(k){
+  clearTimers();const list=album.slice().reverse(),a=list[k],p=PICS.find(x=>x.id===a.id),g=$('game');
+  g.innerHTML=`<div class="page"><div class="page-pic"></div><div class="page-text">${p.name} <small style="font-size:.55em;color:var(--muted)">${dateOf(a.t)}</small></div>
+    <div class="page-nav"><button class="pnav" id="pPrev" type="button" aria-label="앞 그림">◀</button><span class="pnum">${k+1} / ${list.length}</span><button class="pnav" id="pNext" type="button" aria-label="다음 그림">▶</button></div></div>`;
+  const sv=artOf(a);g.querySelector('.page-pic').appendChild(sv);later(()=>sv.classList.add('alive'),300);
+  onTap(g.querySelector('.page-pic'),()=>{if(VSFX[p.id])VSFX[p.id]();else tone(660,.15)});
+  onTap($('pPrev'),()=>{tone(440,.08);k>0?showArt(k-1):showAlbum()});
+  onTap($('pNext'),()=>{tone(560,.08);k<list.length-1?showArt(k+1):showAlbum()});
+  speak(p.name+'!');
+}
+
 /* 안내 말풍선 */
 let toastT=null;
 function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
@@ -963,15 +1022,96 @@ function buildPalette(){
   pal.style.setProperty('--cols',L.cols);pal.style.setProperty('--pcols',L.pcols);
   if(!L.colors.includes(S.color))S.color=L.colors[0];
   L.colors.forEach(i=>{const c=COLORS[i],b=document.createElement('button');b.type='button';b.className='swatch';b.dataset.i=i;b.style.background=c.hex;b.setAttribute('aria-label',c.name);
-    b.addEventListener('click',()=>{S.color=i;S.eraser=false;if(S.mode==='draw'&&S.level>0)S.rainbow=false;syncTools();speak(c.name);tone(440+(i%10)*40);save()});pal.appendChild(b)});
+    b.addEventListener('click',()=>{S.color=i;S.eraser=false;S.pat=null;if(S.mode==='draw'&&S.level>0)S.rainbow=false;syncTools();speak(c.name);tone(440+(i%10)*40);save()});pal.appendChild(b)});
+  (S.level===0?['rainbow','dots']:['stripes','dots','stars','rainbow']).forEach(t=>{const b=document.createElement('button');b.type='button';b.className='swatch pat';b.dataset.pat=t;b.setAttribute('aria-label',PATS[t]);
+    b.addEventListener('click',()=>{S.pat=S.pat===t?null:t;S.eraser=false;syncTools();if(S.pat)speak(PATS[t]);tone(560);save()});pal.appendChild(b)});
+}
+/* 무늬: 'pat:종류:색' 값을 SVG 무늬/그라데이션으로 바꿈 */
+const PATS={stripes:'줄무늬',dots:'물방울',stars:'별무늬',rainbow:'무지개'};
+const NS='http://www.w3.org/2000/svg';
+const starD=(cx,cy,R,r)=>[...Array(10).keys()].map(k=>{const a=-Math.PI/2+k*Math.PI/5,q=k%2?r:R;return(k?'L':'M')+(cx+q*Math.cos(a)).toFixed(1)+' '+(cy+q*Math.sin(a)).toFixed(1)}).join(' ')+'Z';
+const RB_STOPS='<stop offset="0" stop-color="#F2545B"/><stop offset=".2" stop-color="#FF9F43"/><stop offset=".4" stop-color="#FFD93D"/><stop offset=".6" stop-color="#5BC27A"/><stop offset=".8" stop-color="#3D7BE0"/><stop offset="1" stop-color="#9B6BE0"/>';
+function curPaint(){const c=COLORS[S.color].hex;return S.pat?(S.pat==='rainbow'?'pat:rainbow':`pat:${S.pat}:${c}`):c}
+function baseColor(v){if(!v)return null;if(v.startsWith('pat:')){const[,t,c]=v.split(':');return t==='rainbow'?'#9B6BE0':c}return v}
+function patDef(id,t,c,u){
+  if(t==='stripes')return`<pattern id="${id}" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="24" height="24" fill="#fff"/><rect width="12" height="24" fill="${c}"/></pattern>`;
+  if(t==='dots')return`<pattern id="${id}" width="28" height="28" patternUnits="userSpaceOnUse"><rect width="28" height="28" fill="#fff"/><circle cx="14" cy="14" r="7" fill="${c}"/></pattern>`;
+  if(t==='stars')return`<pattern id="${id}" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="#fff"/><path d="${starD(22,22,13,5.5)}" fill="${c}"/></pattern>`;
+  return u?`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="400" y2="400">${RB_STOPS}</linearGradient>`:`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">${RB_STOPS}</linearGradient>`;
+}
+function defsOf(root){let d=root.querySelector(':scope > defs');if(!d){d=document.createElementNS(NS,'defs');root.insertBefore(d,root.firstChild)}return d}
+function paintRef(root,v,forStroke){
+  if(!v||!v.startsWith('pat:'))return v||'';
+  const[,t,c]=v.split(':'),id=`pt-${t}-${(c||'x').slice(1)}-${forStroke?'u':'b'}-${root.dataset.uid}`;
+  if(!root.querySelector('#'+id))defsOf(root).insertAdjacentHTML('beforeend',patDef(id,t,c,forStroke));
+  return`url(#${id})`;
+}
+function patPreview(t,c){
+  if(t==='stripes')return`repeating-linear-gradient(45deg,${c} 0 7px,#fff 7px 14px)`;
+  if(t==='dots')return`radial-gradient(${c} 32%,#fff 35%) 0 0/16px 16px`;
+  if(t==='stars')return`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><rect width='20' height='20' fill='white'/><path d='${starD(10,10,7,3)}' fill='${c}'/></svg>`)}") 0 0/20px 20px`;
+  return'conic-gradient(#F2545B,#FF9F43,#FFD93D,#5BC27A,#3D7BE0,#9B6BE0,#F2545B)';
 }
 
+/* 쓱쓱 붓: 칠하기 시작한 칸 모양으로 잘라서 칸 밖으로 안 나감 */
+const BRUSH_W=[26,18,15];
+function paintsOf(id){return S.paints[id]||(S.paints[id]={})}
+function pdoneOf(id){return S.pdone[id]||(S.pdone[id]=[])}
+function stickersOf(id){return S.stickers[id]||(S.stickers[id]=[])}
+function layerFor(root,id){
+  let L=root.querySelector(`g.paint[data-for="${id}"]`);if(L)return L;
+  const reg=root.querySelector(`[data-id="${id}"]`),cpId=`cp-${id}-${root.dataset.uid}`;
+  const shapes=reg.tagName.toLowerCase()==='g'?[...reg.children]:[reg];
+  const cp=document.createElementNS(NS,'clipPath');cp.id=cpId;cp.setAttribute('clipPathUnits','userSpaceOnUse');
+  shapes.forEach(sh=>{const c=sh.cloneNode(false);['class','style','data-id'].forEach(a=>c.removeAttribute(a));cp.appendChild(c)});
+  defsOf(root).appendChild(cp);
+  L=document.createElementNS(NS,'g');L.setAttribute('class','paint');L.dataset.for=id;L.setAttribute('clip-path',`url(#${cpId})`);
+  const ol=document.createElementNS(NS,'g');ol.setAttribute('class','fx outline');
+  shapes.forEach(sh=>{const c=sh.cloneNode(false);['style','data-id'].forEach(a=>c.removeAttribute(a));c.setAttribute('class','line');ol.appendChild(c)});
+  reg.after(L);L.after(ol);return L;
+}
+const pathD=p=>p.length<=2?`M${p[0]} ${p[1]} l.1 0`:'M'+p[0]+' '+p[1]+p.slice(2).reduce((a,v,i)=>a+(i%2?' ':' L')+v,'');
+function drawStroke(root,id,st){
+  const L=layerFor(root,id),pa=document.createElementNS(NS,'path');
+  pa.setAttribute('d',pathD(st.p));pa.style.stroke=paintRef(root,st.c,true);pa.style.strokeWidth=st.w;L.appendChild(pa);return pa;
+}
+function inkOf(list){let s=0;(list||[]).forEach(st=>{const p=st.p;s+=Math.PI*st.w*st.w/4;for(let i=2;i<p.length;i+=2)s+=Math.hypot(p[i]-p[i-2],p[i+1]-p[i-1])*st.w});return s}
+function needOf(r){try{const b=r.getBBox();return Math.min(b.width*b.height*.5,25000)}catch(e){return 5000}}
+
+/* 스티커 */
+const STK={
+ star:['별',`<path d="${'M0 -26 L7.6 -10.4 L24.7 -8 L12.4 4 L15.3 21 L0 13 L-15.3 21 L-12.4 4 L-24.7 -8 L-7.6 -10.4 Z'}" fill="#FFD93D" stroke="#2B2D42" stroke-width="4" stroke-linejoin="round"/>`],
+ heart:['하트','<path d="M0 20 C-28 2 -28 -20 -13 -22 C-5 -23 0 -15 0 -11 C0 -15 5 -23 13 -22 C28 -20 28 2 0 20 Z" fill="#FF8FC1" stroke="#2B2D42" stroke-width="4" stroke-linejoin="round"/>'],
+ flower:['꽃','<g stroke="#2B2D42" stroke-width="3.5"><circle cx="0" cy="-13" r="10" fill="#FF9F43"/><circle cx="12.4" cy="-4" r="10" fill="#FF9F43"/><circle cx="7.6" cy="10.5" r="10" fill="#FF9F43"/><circle cx="-7.6" cy="10.5" r="10" fill="#FF9F43"/><circle cx="-12.4" cy="-4" r="10" fill="#FF9F43"/><circle cx="0" cy="0" r="8" fill="#FFD93D"/></g>'],
+ cone:['라바콘','<g stroke="#2B2D42" stroke-width="3.5" stroke-linejoin="round"><path d="M-6 -24 L6 -24 L17 16 L-17 16 Z" fill="#FF9F43"/><path d="M-9.5 -10 L9.5 -10 L12 0 L-12 0 Z" fill="#fff"/><rect x="-22" y="16" width="44" height="8" rx="3" fill="#FF9F43"/></g>'],
+ light:['신호등','<g stroke="#2B2D42" stroke-width="3.5"><rect x="-12" y="-28" width="24" height="56" rx="8" fill="#3A3A48"/><circle cx="0" cy="-15" r="6.5" fill="#F2545B"/><circle cx="0" cy="0" r="6.5" fill="#FFD93D"/><circle cx="0" cy="15" r="6.5" fill="#5BC27A"/></g>'],
+ flag:['깃발','<g stroke="#2B2D42" stroke-width="3.5" stroke-linejoin="round"><path d="M-14 26 L-14 -26" stroke-linecap="round"/><path d="M-14 -24 L20 -14 L-14 -2 Z" fill="#5BC27A"/></g>']
+};
+function renderStickers(root,list,popLast){
+  let g=root.querySelector(':scope > g.stickers');
+  if(!list.length){if(g)g.remove();return}
+  if(!g){g=document.createElementNS(NS,'g');g.setAttribute('class','stickers');root.appendChild(g)}
+  g.innerHTML=list.map((t,i)=>`<g class="stk" data-k="${i}" transform="translate(${t.x} ${t.y})"><g class="${popLast&&i===list.length-1?'stkpop':''}">${STK[t.t]?STK[t.t][1]:''}</g></g>`).join('');
+}
+function buildTray(){
+  $('stkTray').innerHTML=Object.entries(STK).map(([k,[n,art]])=>`<button class="stkb" type="button" data-k="${k}" aria-label="${n}"><svg viewBox="-30 -30 60 60">${art}</svg></button>`).join('');
+  $('stkTray').querySelectorAll('.stkb').forEach(b=>b.addEventListener('click',()=>{S.stk=b.dataset.k;S.eraser=false;syncTools();speak(STK[S.stk][0]);tone(620);save()}));
+}
+
+/* 내 그림첩 */
+const AKEY='colorplay.album';let album=[];try{album=JSON.parse(localStorage.getItem(AKEY)||'[]')}catch(e){album=[]}
+let curAlbum=-1;
+function saveAlbum(){for(let k=0;k<5;k++){try{localStorage.setItem(AKEY,JSON.stringify(album));return}catch(e){album.shift();curAlbum--}}}
+function snapshot(p){return{id:p.id,f:{...fillsOf(p.id)},pt:JSON.parse(JSON.stringify(paintsOf(p.id))),pd:[...pdoneOf(p.id)],st:[...stickersOf(p.id)],t:Date.now()}}
+function albumTouch(){const p=PICS[S.pic];if(curAlbum>=0&&album[curAlbum]&&album[curAlbum].id===p.id){album[curAlbum]=snapshot(p);saveAlbum()}}
+
+
 /* 색칠 그림 */
-function makeSvg(p){return p.svg.replace(/CLIP/g,'clip'+(++uid))}
-function paint(root,fills){root.querySelectorAll('.r').forEach(r=>{r.style.fill=fills[r.dataset.id]||''})}
+function makeSvg(p){const u=++uid;return p.svg.replace(/CLIP/g,'clip'+u).replace('<svg ',`<svg data-uid="${u}" `)}
+function paint(root,fills){const sv=root.tagName.toLowerCase()==='svg'?root:root.querySelector('svg');sv.querySelectorAll('.r').forEach(r=>{r.style.fill=paintRef(sv,fills[r.dataset.id],false)})}
 function fillsOf(id){return S.fills[id]||(S.fills[id]={})}
 const REG={};function regIds(p){return REG[p.id]||(REG[p.id]=[...p.svg.matchAll(/data-id="([^"]+)"/g)].map(m=>m[1]))}
-function isDone(p){const f=S.fills[p.id]||{};return regIds(p).every(id=>f[id])}
+function isDone(p){const f=S.fills[p.id]||{},D=S.pdone[p.id]||[];return regIds(p).every(id=>f[id]||D.includes(id))}
 function units(p){return regIds(p).map(id=>[id])}
 
 function render(){
@@ -979,41 +1119,50 @@ function render(){
   mission=null;
   const draw=S.mode==='draw';
   paper.hidden=!draw;$('brush').hidden=!draw;$('dots').hidden=draw;$('mission').hidden=true;
-  document.querySelector('.hint').textContent=draw?'손가락으로 쓱쓱 그려요':(S.level===0?'아무 데나 콕!':'색을 고르고 그림을 콕!');
+  const HINT={fill:S.level===0?'아무 데나 콕!':'색을 고르고 그림을 콕!',brush:'손가락으로 쓱쓱 칠해요',sticker:'스티커를 골라 콕 붙여요'};
+  document.querySelector('.hint').textContent=draw?'손가락으로 쓱쓱 그려요':HINT[S.paint];
+  const colorMode=S.mode==='color';$('seg').hidden=!colorMode;$('stkTray').hidden=!(colorMode&&S.paint==='sticker');
+  document.querySelector('.app').classList.toggle('stkmode',colorMode&&S.paint==='sticker');document.querySelector('.app').classList.toggle('drawmode',draw);
+  curAlbum=-1;
   document.querySelectorAll('.bsz[data-s]').forEach(b=>b.hidden=S.level===0);
   $('guideBtn').hidden=S.level!==2;
   drawGuide();
   const game=$('game');game.hidden=true;game.innerHTML='';clearTimers();
   const isGame=GAME_MODES.includes(S.mode);document.querySelector('.app').classList.toggle('game',isGame);
   if(isGame){done.hidden=true;$('picName').textContent=GAME_TITLE[S.mode];document.querySelector('.hint').textContent=GAME_HINT[S.mode];
-    game.hidden=false;({quiz:startQuiz,match:startMatch,book:showBooks})[S.mode]();syncTools();return}
+    game.hidden=false;({quiz:startQuiz,match:startMatch,book:showBooks,album:showAlbum})[S.mode]();syncTools();return}
   if(draw){$('picName').textContent='자유 그리기';done.hidden=true;sizePaper();syncTools();return}
   const p=PICS[S.pic];
   board.insertAdjacentHTML('afterbegin',makeSvg(p));
   svg=board.querySelector('svg.pic');regions=[...svg.querySelectorAll('.r')];
   paint(svg,fillsOf(p.id));
+  Object.entries(paintsOf(p.id)).forEach(([id,list])=>list.forEach(x=>drawStroke(svg,id,x)));
+  renderStickers(svg,stickersOf(p.id),false);
   $('picName').textContent=p.name;
+  $('dots').hidden=S.paint==='sticker';
   stacks[p.id]=stacks[p.id]||[];
   update(false);syncTools();
   if(S.level===2)newMission('');
 }
 function update(celebrate){
   if(!svg)return;
-  const p=PICS[S.pic],f=fillsOf(p.id);
-  $('dots').innerHTML=units(p).map(u=>`<span style="background:${u.every(id=>f[id])?f[u[0]]:'#fff'}"></span>`).join('');
-  const complete=regions.every(r=>f[r.dataset.id]);
+  const p=PICS[S.pic],f=fillsOf(p.id),D=pdoneOf(p.id),P=paintsOf(p.id);
+  const dotColor=id=>f[id]?baseColor(f[id]):D.includes(id)?baseColor(P[id][P[id].length-1].c):'#fff';
+  $('dots').innerHTML=regIds(p).map(id=>`<span style="background:${dotColor(id)}"></span>`).join('');
+  const complete=regions.every(r=>f[r.dataset.id]||D.includes(r.dataset.id));
   const was=svg.classList.contains('alive');
   svg.classList.toggle('alive',complete);done.hidden=!complete;
-  if(complete){$('doneText').textContent='다 칠했어요!';$('next').textContent='다음 그림 ▶'}
+  if(complete){$('doneText').textContent='다 칠했어요!';$('next').textContent='다음 그림 ▶';$('again').hidden=false}
   if(complete){mission=null;regions.forEach(r=>r.classList.remove('target'));$('mission').hidden=true}
-  if(complete&&!was&&celebrate){confetti();speak('우와! '+p.name+' 다 칠했어요! '+(p.cheer||''));[523,659,784,1047].forEach((n,i)=>tone(n,.18,i*.12,.2));if(VSFX[p.id])setTimeout(VSFX[p.id],700);return true}
+  if(complete&&!was&&celebrate){album.push(snapshot(p));if(album.length>60)album.shift();curAlbum=album.length-1;saveAlbum();later(()=>toast('그림첩에 넣었어요!'),1800);confetti();speak('우와! '+p.name+' 다 칠했어요! '+(p.cheer||''));[523,659,784,1047].forEach((n,i)=>tone(n,.18,i*.12,.2));if(VSFX[p.id])setTimeout(VSFX[p.id],700);return true}
+  if(complete)albumTouch();
   return false;
 }
 
 /* 5세 이상: 반짝이는 곳 미션 */
 function newMission(prefix){
   regions.forEach(r=>r.classList.remove('target'));
-  const f=fillsOf(PICS[S.pic].id),open=regions.filter(r=>!f[r.dataset.id]);
+  const f=fillsOf(PICS[S.pic].id),D=pdoneOf(PICS[S.pic].id),open=regions.filter(r=>!f[r.dataset.id]&&!D.includes(r.dataset.id));
   if(!open.length){mission=null;$('mission').hidden=true;return}
   const r=open[Math.floor(Math.random()*open.length)],ci=Math.floor(Math.random()*10);
   mission={id:r.dataset.id,ci};r.classList.add('target');
@@ -1031,11 +1180,12 @@ function jiggle(ids){
     g.onanimationend=e=>{if(e.target===g)g.classList.remove('jiggle')}});
 }
 function fillUnit(ids,next,x,y){
-  const p=PICS[S.pic],f=fillsOf(p.id);
-  stacks[p.id].push(ids.map(id=>({id,prev:f[id]||null})));
+  const p=PICS[S.pic],f=fillsOf(p.id),P=paintsOf(p.id),D=pdoneOf(p.id);
+  stacks[p.id].push({fill:ids.map(id=>({id,prev:f[id]||null,strokes:next===null?(P[id]||[]):null,pd:D.includes(id)}))});
   ids.forEach(id=>{if(next)f[id]=next;else delete f[id];
-    const el=svg.querySelector(`[data-id="${id}"]`);el.style.fill=next||'';el.classList.remove('pop');void el.getBoundingClientRect();el.classList.add('pop')});
-  burst(x,y,next||'#C9D3DE',S.level===0?24:14);
+    if(next===null){delete P[id];const k=D.indexOf(id);if(k>=0)D.splice(k,1);const L=svg.querySelector(`g.paint[data-for="${id}"]`);if(L)L.innerHTML=''}
+    const el=svg.querySelector(`[data-id="${id}"]`);el.style.fill=paintRef(svg,next,false);el.classList.remove('pop');void el.getBoundingClientRect();el.classList.add('pop')});
+  burst(x,y,baseColor(next)||'#C9D3DE',S.level===0?24:14);
   if(next)jiggle(ids);
   if(next&&ids.some(i=>i==='ftSiren'||i==='pcSL'||i==='pcSR'||i==='amSiren'))siren();
   if(next&&ids.some(i=>/^(busLight)$/.test(i)))horn();
@@ -1044,20 +1194,60 @@ function fillUnit(ids,next,x,y){
   const hitMission=mission&&ids.includes(mission.id);
   const finished=update(true);
   if(S.level===2&&!finished){
-    if(hitMission&&next===COLORS[mission.ci].hex){S.stars++;save();burst(x,y,'#FFC93C',30);tone(1047,.2,.1,.2);newMission('잘했어요! 별 하나! 이번엔 ')}
+    if(hitMission&&baseColor(next)===COLORS[mission.ci].hex){S.stars++;save();burst(x,y,'#FFC93C',30);tone(1047,.2,.1,.2);newMission('잘했어요! 별 하나! 이번엔 ')}
     else if(hitMission||!mission||f[mission.id])newMission('');
   }
 }
 
+const blive=new Map();
+function toLocal(el,e){const m=el.getScreenCTM();if(!m)return{x:0,y:0};const pt=new DOMPoint(e.clientX,e.clientY).matrixTransform(m.inverse());return{x:Math.round(pt.x),y:Math.round(pt.y)}}
+function brushDown(e){
+  const r=e.target.closest('.r');if(!r||!svg.contains(r))return;
+  e.preventDefault();try{board.setPointerCapture(e.pointerId)}catch(_){}
+  const id=r.dataset.id,L=layerFor(svg,id),pt=toLocal(L.parentNode,e);
+  const st={c:curPaint(),w:BRUSH_W[S.level]||18,p:[pt.x,pt.y]};
+  blive.set(e.pointerId,{id,st,pa:drawStroke(svg,id,st),L,len:0});tone(480+(S.color%10)*30,.06,0,.1);
+}
+function brushMove(e){
+  const b=blive.get(e.pointerId);if(!b)return;
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  for(const ev of (evs.length?evs:[e])){const pt=toLocal(b.L.parentNode,ev),p=b.st.p,dx=pt.x-p[p.length-2],dy=pt.y-p[p.length-1],d=Math.hypot(dx,dy);
+    if(d<3)continue;p.push(pt.x,pt.y);b.len+=d;if(b.len>140){b.len=0;tone(300+Math.random()*250,.04,0,.05)}}
+  b.pa.setAttribute('d',pathD(b.st.p));
+}
+function brushUp(e){
+  const b=blive.get(e.pointerId);if(!b)return;blive.delete(e.pointerId);
+  const p=PICS[S.pic],P=paintsOf(p.id);(P[b.id]=P[b.id]||[]).push(b.st);stacks[p.id].push({stroke:b.id});
+  checkPainted(b.id,b.st);save();albumTouch();
+}
+function checkPainted(id,st){
+  const p=PICS[S.pic],D=pdoneOf(p.id),P=paintsOf(p.id);if(D.includes(id))return;
+  const r=svg.querySelector(`[data-id="${id}"]`);if(inkOf(P[id])<needOf(r))return;
+  D.push(id);jiggle([id]);const bb=r.getBoundingClientRect();burst(bb.left+bb.width/2,bb.top+bb.height/2,baseColor(st.c),18);tone(660,.12,0,.16);save();
+  const fin=update(true);
+  if(S.level===2&&!fin&&mission&&mission.id===id){
+    if(baseColor(st.c)===COLORS[mission.ci].hex){S.stars++;save();tone(1047,.2,.1,.2);newMission('잘했어요! 별 하나! 이번엔 ')}else newMission('')}
+}
+function stickerDown(e){
+  const p=PICS[S.pic],list=stickersOf(p.id);e.preventDefault();
+  if(S.eraser){const s=e.target.closest('.stk');if(s){list.splice(+s.dataset.k,1);renderStickers(svg,list,false);tone(300,.1);save();albumTouch()}return}
+  if(!e.target.closest('svg.pic'))return;
+  const pt=toLocal(svg,e);list.push({t:S.stk,x:pt.x,y:pt.y});stacks[p.id].push({sticker:1});
+  renderStickers(svg,list,true);burst(e.clientX,e.clientY,'#FFC93C',12);tone(760,.1,0,.15);save();albumTouch();
+}
+board.addEventListener('pointermove',brushMove);
+['pointerup','pointercancel'].forEach(t=>board.addEventListener(t,brushUp));
 board.addEventListener('pointerdown',e=>{
   if(!svg||e.target.closest('.done'))return;
-  const p=PICS[S.pic],f=fillsOf(p.id),next=S.eraser?null:COLORS[S.color].hex;
+  if(S.paint==='sticker'){stickerDown(e);return}
+  if(S.paint==='brush'&&!S.eraser){brushDown(e);return}
+  const p=PICS[S.pic],f=fillsOf(p.id),D=pdoneOf(p.id),next=S.eraser?null:curPaint();
   const r=e.target.closest('.r');
   let unit=r&&svg.contains(r)?[r.dataset.id]:null;
-  if(S.level===0&&!S.eraser&&!unit){const id=regIds(p).find(id=>!f[id]);if(id)unit=[id]}
+  if(S.level===0&&!S.eraser&&!unit&&S.paint==='fill'){const id=regIds(p).find(id=>!f[id]&&!D.includes(id));if(id)unit=[id]}
   if(!unit)return;
   e.preventDefault();
-  if(unit.every(id=>(f[id]||null)===next)){tone(330,.08);return}
+  if(unit.every(id=>(f[id]||null)===next&&(next!==null||!(paintsOf(p.id)[id]||[]).length))){tone(330,.08);return}
   fillUnit(unit,next,e.clientX,e.clientY);
 });
 
@@ -1130,7 +1320,10 @@ $('guideBtn').addEventListener('click',()=>{S.guide=(S.guide+1)%GUIDES.length;dr
 /* 도구 */
 function syncTools(){
   const draw=S.mode==='draw';
-  [...pal.children].forEach(b=>b.setAttribute('aria-pressed',String(!S.eraser&&!(draw&&S.rainbow)&&+b.dataset.i===S.color)));
+  [...pal.children].forEach(b=>{if(b.dataset.pat){b.setAttribute('aria-pressed',String(!S.eraser&&S.pat===b.dataset.pat));b.style.background=patPreview(b.dataset.pat,COLORS[S.color].hex)}
+    else b.setAttribute('aria-pressed',String(!S.eraser&&!(draw&&S.rainbow)&&+b.dataset.i===S.color))});
+  $('seg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===S.paint)));
+  $('stkTray').querySelectorAll('.stkb').forEach(b=>b.setAttribute('aria-pressed',String(!S.eraser&&b.dataset.k===S.stk)));
   $('tErase').classList.toggle('on',S.eraser);$('tErase').setAttribute('aria-pressed',String(S.eraser));
   $('tSound').setAttribute('aria-pressed',String(S.audio>0));
   $('soundIcon').innerHTML=S.audio===2?'<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>':S.audio===1?'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>':'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/>';
@@ -1139,6 +1332,8 @@ function syncTools(){
   document.querySelectorAll('.bsz[data-s]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.s===S.size)));
   $('rainbow').setAttribute('aria-pressed',String(S.rainbow));
 }
+$('seg').querySelectorAll('button').forEach(b=>onTap(b,()=>{S.paint=b.dataset.m;S.eraser=false;save();render();tone(560);
+  speak({fill:'콕 채우기',brush:'쓱쓱 칠하기',sticker:'스티커'}[S.paint])}));
 $('tErase').addEventListener('click',()=>{S.eraser=!S.eraser;syncTools();if(S.eraser)speak('지우개');tone(300)});
 $('tSound').addEventListener('click',()=>{S.audio=(S.audio+2)%3;
   if(S.audio!==2)musicOff();if(S.audio===0)try{speechSynthesis.cancel()}catch(e){}
@@ -1148,9 +1343,13 @@ $('tUndo').addEventListener('click',()=>{
   if(GAME_MODES.includes(S.mode))return;
   if(S.mode==='draw'){if(!strokes.length){tone(250,.1);return}strokes.pop();redraw();saveDraw();tone(380,.1);return}
   const p=PICS[S.pic],last=stacks[p.id].pop();if(!last){tone(250,.1);return}
-  const f=fillsOf(p.id);
-  last.forEach(({id,prev})=>{if(prev)f[id]=prev;else delete f[id];svg.querySelector(`[data-id="${id}"]`).style.fill=prev||''});
-  tone(380,.1);save();update(false);
+  const f=fillsOf(p.id),P=paintsOf(p.id),D=pdoneOf(p.id);
+  if(last.fill)last.fill.forEach(({id,prev,strokes,pd})=>{if(prev)f[id]=prev;else delete f[id];svg.querySelector(`[data-id="${id}"]`).style.fill=paintRef(svg,prev,false);
+    if(strokes){P[id]=strokes;strokes.forEach(x=>drawStroke(svg,id,x));if(pd&&!D.includes(id))D.push(id)}});
+  if(last.stroke){const id=last.stroke,list=P[id]||[];list.pop();const L=svg.querySelector(`g.paint[data-for="${id}"]`);if(L&&L.lastChild)L.lastChild.remove();
+    const r=svg.querySelector(`[data-id="${id}"]`);if(D.includes(id)&&inkOf(list)<needOf(r))D.splice(D.indexOf(id),1)}
+  if(last.sticker){const list=stickersOf(p.id);list.pop();renderStickers(svg,list,false)}
+  tone(380,.1);save();update(false);albumTouch();
   if(S.level===2&&!mission)newMission('');
 });
 function holdButton(el,ms,onDone,onShort){
@@ -1165,7 +1364,7 @@ holdButton(rb,900,()=>{
   tone(220,.25);
   if(GAME_MODES.includes(S.mode)){render();toast('처음부터!');return}
   if(S.mode==='draw'){strokes=[];redraw();saveDraw();speak('새 종이예요');toast('새 종이!');return}
-  const p=PICS[S.pic];S.fills[p.id]={};stacks[p.id]=[];paint(svg,{});update(false);save();
+  const p=PICS[S.pic];S.fills[p.id]={};S.paints[p.id]={};S.pdone[p.id]=[];S.stickers[p.id]=[];stacks[p.id]=[];save();render();
   if(S.level===2)newMission('처음부터 다시! ');else speak('처음부터 다시 칠해요');
   toast('처음부터 다시!');
 },()=>{toast('꾹 누르고 있으면 지워져요');tone(300,.1)});
@@ -1183,6 +1382,7 @@ function openPicker(){
   const box=$('picks');box.innerHTML='<h3 class="psec">놀이</h3>';
   const MODES=[['quiz','소리 맞히기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF1EC"/><path d="M100 160 L150 160 L214 108 L214 292 L150 240 L100 240 Z" fill="#FF7A59"/><path d="M252 150 Q288 200 252 250 M290 116 Q350 200 290 284" fill="none" stroke="#FF7A59" stroke-width="22" stroke-linecap="round"/></svg>'],
     ['match','짝 맞추기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F1F7FC"/><g transform="rotate(-8 120 200)"><rect x="50" y="90" width="140" height="210" rx="24" fill="#FF7A59"/><text x="120" y="226" font-size="96" text-anchor="middle" fill="#fff" font-family="sans-serif">?</text></g><g transform="rotate(8 280 200)"><rect x="210" y="90" width="140" height="210" rx="24" fill="#fff" stroke="#2B2D42" stroke-width="10"/><circle cx="280" cy="195" r="42" fill="#FFD93D" stroke="#2B2D42" stroke-width="8"/></g></svg>'],
+    ['album','내 그림첩','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF8E1"/><g transform="rotate(-6 150 200)"><rect x="60" y="100" width="170" height="190" rx="14" fill="#fff" stroke="#2B2D42" stroke-width="10"/><rect x="80" y="120" width="130" height="110" fill="#6EC6F0"/><circle cx="175" cy="150" r="16" fill="#FFD93D"/><path d="M80 230 L120 180 L160 230 Z" fill="#5BC27A"/></g><g transform="rotate(8 270 210)"><rect x="190" y="110" width="160" height="180" rx="14" fill="#fff" stroke="#2B2D42" stroke-width="10"/><path d="M230 230 L270 160 L310 230 Z" fill="#FF8FC1"/></g></svg>'],
     ['book','그림책','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F4FBEF"/><path d="M200 110 Q140 80 60 100 L60 310 Q140 290 200 320 Z" fill="#6EC6F0" stroke="#2B2D42" stroke-width="10" stroke-linejoin="round"/><path d="M200 110 Q260 80 340 100 L340 310 Q260 290 200 320 Z" fill="#FFD93D" stroke="#2B2D42" stroke-width="10" stroke-linejoin="round"/><path d="M95 150 L165 140 M95 190 L165 180 M235 140 L305 150 M235 180 L305 190" stroke="#2B2D42" stroke-width="8" stroke-linecap="round"/></svg>']];
   MODES.forEach(([m,label,art])=>{const b=document.createElement('button');b.type='button';b.className='pick';b.setAttribute('aria-current',String(S.mode===m));
     b.innerHTML=art+`<span>${label}</span>`;onTap(b,()=>{S.mode=m;S.eraser=false;save();picker.hidden=true;render();speak(label);tone(520)});box.appendChild(b)});
@@ -1194,8 +1394,8 @@ function openPicker(){
   box.insertAdjacentHTML('beforeend','<h3 class="psec">색칠하기</h3>');
   PICS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='pick';
     b.setAttribute('aria-current',String(S.mode==='color'&&i===S.pic));
-    b.innerHTML=makeSvg(p)+`<span>${p.name}</span>`+(isDone(p)?'<span class="badge">완성</span>':'');
-    paint(b,S.fills[p.id]||{});
+    b.appendChild(thumbFrom(p,S.fills[p.id]||{},S.paints[p.id]||{},S.stickers[p.id]||[],false));
+    b.insertAdjacentHTML('beforeend',`<span>${p.name}</span>`+(isDone(p)?'<span class="badge">완성</span>':''));
     onTap(b,()=>{S.mode='color';S.pic=i;S.eraser=false;save();picker.hidden=true;render();if(S.level!==2)speak(p.name);tone(520)});
     box.appendChild(b)});
   picker.hidden=false;
@@ -1203,6 +1403,7 @@ function openPicker(){
 $('tPick').addEventListener('click',()=>{openPicker();tone(480)});
 $('pClose').addEventListener('click',()=>{picker.hidden=true});
 picker.addEventListener('click',e=>{if(e.target===picker)picker.hidden=true});
+$('again').addEventListener('click',()=>{const p=PICS[S.pic];S.fills[p.id]={};S.paints[p.id]={};S.pdone[p.id]=[];S.stickers[p.id]=[];stacks[p.id]=[];save();render();speak('새로 칠해요! 그림첩에 그대로 있어요.');tone(600)});
 $('next').addEventListener('click',()=>{if(S.mode==='match'){done.hidden=true;startMatch();return}S.pic=(S.pic+1)%PICS.length;save();render();if(S.level!==2)speak(PICS[S.pic].name);tone(520)});
 
 /* 어른 설정: 제목을 2초 꾹 */
@@ -1219,7 +1420,7 @@ holdButton($('picName'),2000,()=>{tone(700,.15);openSettings()});
 $('sClose').addEventListener('click',()=>{settings.hidden=true});
 settings.addEventListener('click',e=>{if(e.target===settings)settings.hidden=true});
 
-buildPalette();render();
+buildPalette();buildTray();render();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
