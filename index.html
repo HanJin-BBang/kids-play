@@ -561,7 +561,7 @@ const PICS=[
 COLORS.push({name:'연분홍',hex:'#FFC6DC'},{name:'연노랑',hex:'#FFF0A6'},{name:'연두색',hex:'#B8E986'},{name:'연하늘',hex:'#BFE6FA'},{name:'연보라',hex:'#D3C0F5'});
 /* 나이 단계: 0 = 2~3세, 1 = 3~4세, 2 = 5세 이상 */
 const LEVELS=[
-  {label:'2~3세',desc:'큰 칸 3개 · 색 4가지 · 아무 데나 눌러도 칠해져요 · 그리기는 굵은 무지개 붓',colors:[0,2,5,3],cols:2,pcols:4},
+  {label:'2~3세',desc:'색 4가지 · 그림 밖 빈 곳을 눌러도 다음 칸이 칠해져요 · 그리기는 굵은 무지개 붓',colors:[0,2,5,3],cols:2,pcols:4},
   {label:'3~4세',desc:'칸 5~10개 · 색 10가지 · 색 이름 듣기 · 붓 굵기 3단계',colors:[0,1,2,3,4,5,6,7,8,9],cols:2,pcols:5},
   {label:'5세 이상',desc:'연한 색까지 15가지 · 반짝이는 곳 색칠 미션 · 점선 따라 그리기',colors:[...Array(15).keys()],cols:3,pcols:5}
 ];
@@ -641,7 +641,7 @@ function musicTick(){
 function musicOn(){
   if(S.audio!==2||mus.timer||document.hidden)return;
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
-    mus.gain=mus.gain||(()=>{const g=ac.createGain();g.gain.value=.05;g.connect(ac.destination);return g})();
+    mus.gain=mus.gain||(()=>{const g=ac.createGain();g.gain.value=.16;g.connect(ac.destination);return g})();
     mus.t=ac.currentTime+.1;mus.timer=setInterval(musicTick,80);musicTick()}catch(e){}
 }
 function musicOff(){if(mus.timer){clearInterval(mus.timer);mus.timer=null}
@@ -701,7 +701,7 @@ function paint(root,fills){root.querySelectorAll('.r').forEach(r=>{r.style.fill=
 function fillsOf(id){return S.fills[id]||(S.fills[id]={})}
 const REG={};function regIds(p){return REG[p.id]||(REG[p.id]=[...p.svg.matchAll(/data-id="([^"]+)"/g)].map(m=>m[1]))}
 function isDone(p){const f=S.fills[p.id]||{};return regIds(p).every(id=>f[id])}
-function units(p){return S.level===0?GROUPS[p.id]:regIds(p).map(id=>[id])}
+function units(p){return regIds(p).map(id=>[id])}
 
 function render(){
   if(svg){svg.remove();svg=null;regions=[]}
@@ -777,8 +777,8 @@ board.addEventListener('pointerdown',e=>{
   if(!svg||e.target.closest('.done'))return;
   const p=PICS[S.pic],f=fillsOf(p.id),next=S.eraser?null:COLORS[S.color].hex;
   const r=e.target.closest('.r');
-  let unit=r&&svg.contains(r)?(S.level===0?units(p).find(u=>u.includes(r.dataset.id)):[r.dataset.id]):null;
-  if(S.level===0&&!S.eraser&&(!unit||unit.every(id=>f[id]===next)))unit=units(p).find(u=>u.some(id=>!f[id]))||unit;
+  let unit=r&&svg.contains(r)?[r.dataset.id]:null;
+  if(S.level===0&&!S.eraser&&!unit){const id=regIds(p).find(id=>!f[id]);if(id)unit=[id]}
   if(!unit)return;
   e.preventDefault();
   if(unit.every(id=>(f[id]||null)===next)){tone(330,.08);return}
