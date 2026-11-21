@@ -314,7 +314,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .pz-frame .pz-ghost,.pz-frame .pz-full{position:absolute;inset:0;width:100%;height:100%}
 .pz-slot{border:2px dashed #C3D3DE;position:relative}
 .pz-piece{position:absolute;touch-action:none;pointer-events:none}
-.pz-piece svg{width:100%;height:100%;display:block;pointer-events:none;overflow:visible;filter:drop-shadow(0 4px 0 var(--tool-shadow))}
+.pz-piece svg{width:100%;height:100%;display:block;pointer-events:none;overflow:visible}
 .pz-piece .pz-hit{fill:transparent;stroke:none;pointer-events:all;cursor:grab}
 .pz-piece .pz-edge{fill:none;stroke:#fff;stroke-width:4;vector-effect:non-scaling-stroke;pointer-events:none}
 .pz-piece:not(.placed) svg{transform:scale(var(--k,1));transition:transform .2s}
@@ -504,7 +504,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .hg-big span{font-size:clamp(70px,14vh,120px);color:#3D7BE0}.hg-big small{font-size:18px;color:var(--muted);margin:2px 0 8px}
 .hg-card{display:grid;grid-template-rows:1fr auto}.hg-name{font-size:clamp(18px,3vh,26px)}.hg-name b{font-weight:400;color:#3D7BE0}
 .lim-h{margin:18px 0 8px;font-weight:400;font-size:20px}.lim-h small{font-size:14px;color:var(--muted);margin-left:6px}
-.lim-row{display:flex;gap:8px}.lim{flex:1;padding:12px;border-radius:16px;background:var(--bg);font-size:18px}.lim[aria-pressed=true]{background:var(--ink);color:#fff}
+.lim-row{display:flex;gap:8px}.lim,.vol{flex:1;padding:12px;border-radius:16px;background:var(--bg);font-size:18px}.lim[aria-pressed=true],.vol[aria-pressed=true]{background:var(--ink);color:#fff}
 #rest{position:fixed;inset:0;z-index:90;background:rgba(30,40,80,.86);display:grid;place-items:center;padding:20px}
 .rest-card{background:#fff;border-radius:30px;padding:24px;width:min(460px,100%);text-align:center}
 .rest-card h2{margin:6px 0;font-weight:400;font-size:32px}.rest-card p{font-size:20px;color:var(--muted);line-height:1.5}
@@ -702,11 +702,11 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
   </div>
 </div>
 <div class="picker" id="settings" hidden>
-  <div class="picker-card" role="dialog" aria-label="나이 단계" style="width:min(620px,100%)">
-    <div class="picker-head"><h2>나이 단계</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
+  <div class="picker-card" role="dialog" aria-label="어른 설정" style="width:min(620px,100%)">
+    <div class="picker-head"><h2>어른 설정</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
     <div class="levels" id="levels"></div>
     <div id="limitBox"></div>
-    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 15</b></p>
+    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 16</b></p>
   </div>
 </div>
 <div class="picker" id="share" hidden>
@@ -1164,36 +1164,46 @@ if(S.pic>=PICS.length)S.pic=0;
 if(S.audio===undefined)S.audio=S.sound===false?0:2;
 ['paints','pdone','stickers'].forEach(k=>{if(!S[k]||typeof S[k]!=='object')S[k]={}});if(!['fill','brush','sticker'].includes(S.paint))S.paint='fill';
 const stacks={};
-const save=()=>{try{const{eraser,...k}=S;localStorage.setItem(KEY,JSON.stringify(k))}catch(e){}};
+let saveT=null;const saveNow=()=>{clearTimeout(saveT);saveT=null;try{const{eraser,...k}=S;localStorage.setItem(KEY,JSON.stringify(k))}catch(e){}};
+const save=()=>{if(!saveT)saveT=setTimeout(saveNow,500)};addEventListener('pagehide',()=>{if(saveT)saveNow()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&saveT)saveNow()});
 const $=id=>document.getElementById(id);
 const board=$('board'),done=$('done'),paper=$('paper'),pc=paper.getContext('2d');
 let svg=null,regions=[],uid=0,mission=null;
 
 /* 소리 */
 let ac=null;
+/* 소리 크기: 모든 소리 → 마스터(크게) → 압축기(찢어지지 않게) → 스피커 */
+const VOLS=[[1,'보통'],[2.2,'크게'],[3.4,'아주 크게']];let master=null;
+function out(){if(!master){const c=ac.createDynamicsCompressor();c.threshold.value=-20;c.knee.value=12;c.ratio.value=8;c.attack.value=.003;c.release.value=.2;c.connect(ac.destination);
+  master=ac.createGain();master.connect(c)}master.gain.value=(VOLS[S.vol??1]||VOLS[1])[0];return master}
 function tone(f,dur=.13,when=0,vol=.16){
   if(!(S.audio>0))return;
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();
     const t=ac.currentTime+when,o=ac.createOscillator(),g=ac.createGain();
     o.type='sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*1.4,t+dur);
     g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+.03)}catch(e){}
+    o.connect(g).connect(out());o.start(t);o.stop(t+dur+.03)}catch(e){}
 }
 function speak(text){
   if(!(S.audio>0))return;
   try{const u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=.95;u.pitch=1.2;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
 }
 
-/* 배경음악: 작은 별 · 나비야(Hänschen klein) · 떴다 떴다 비행기(Mary had a little lamb) · 런던 다리 — 모두 19세기 이전 민요 멜로디 */
+/* 배경음악 9곡: 작은 별 · 나비야 · 떴다 떴다 비행기 · 런던 다리 · 노를 저어라(1852) · 맥도널드 할아버지 농장(1917) · 프레르 자크(18세기) · 브람스 자장가(1868) · 징글벨(1857) — 모두 저작권이 끝난 옛 멜로디 */
 const SONGS=[
  'C5 C5 G5 G5 A5 A5 G5:2 F5 F5 E5 E5 D5 D5 C5:2 G5 G5 F5 F5 E5 E5 D5:2 G5 G5 F5 F5 E5 E5 D5:2 C5 C5 G5 G5 A5 A5 G5:2 F5 F5 E5 E5 D5 D5 C5:2',
  'G5 E5 E5:2 F5 D5 D5:2 C5 D5 E5 F5 G5 G5 G5:2 G5 E5 E5:2 F5 D5 D5:2 C5 E5 G5 G5 E5:4 D5 D5 D5 D5 D5 E5 F5:2 E5 E5 E5 E5 E5 F5 G5:2 G5 E5 E5:2 F5 D5 D5:2 C5 E5 G5 G5 C5:4',
  'E5 D5 C5 D5 E5 E5 E5:2 D5 D5 D5:2 E5 G5 G5:2 E5 D5 C5 D5 E5 E5 E5 E5 D5 D5 E5 D5 C5:4',
- 'G5:1.5 A5:0.5 G5 F5 E5 F5 G5:2 D5 E5 F5:2 E5 F5 G5:2 G5:1.5 A5:0.5 G5 F5 E5 F5 G5:2 D5:2 G5:2 E5 C5:3'
+ 'G5:1.5 A5:0.5 G5 F5 E5 F5 G5:2 D5 E5 F5:2 E5 F5 G5:2 G5:1.5 A5:0.5 G5 F5 E5 F5 G5:2 D5:2 G5:2 E5 C5:3',
+ 'C5:1.5 C5:1.5 C5 D5:0.5 E5:1.5 E5 D5:0.5 E5 F5:0.5 G5:3 C6:0.5 C6:0.5 C6:0.5 G5:0.5 G5:0.5 G5:0.5 E5:0.5 E5:0.5 E5:0.5 C5:0.5 C5:0.5 C5:0.5 G5 F5:0.5 E5 D5:0.5 C5:3',
+ 'G5 G5 G5 D5 E5 E5 D5:2 B5 B5 A5 A5 G5:3 R D5 G5 G5 G5 D5 E5 E5 D5:2 B5 B5 A5 A5 G5:3',
+ 'C5 D5 E5 C5 C5 D5 E5 C5 E5 F5 G5:2 E5 F5 G5:2 G5:0.5 A5:0.5 G5:0.5 F5:0.5 E5 C5 G5:0.5 A5:0.5 G5:0.5 F5:0.5 E5 C5 C5 G4 C5:2 C5 G4 C5:2',
+ 'E5:0.5 E5:0.5 G5:2 E5:0.5 E5:0.5 G5:2 E5:0.5 G5:0.5 C6 B5:1.5 A5:0.5 A5 G5 D5:0.5 E5:0.5 F5 D5 D5:0.5 E5:0.5 F5:2 D5:0.5 F5:0.5 B5:0.5 A5:0.5 G5 B5 C6:3',
+ 'E5 E5 E5:2 E5 E5 E5:2 E5 G5 C5:1.5 D5:0.5 E5:4 F5 F5 F5:1.5 F5:0.5 F5 E5 E5 E5:0.5 E5:0.5 E5 D5 D5 E5 D5:2 G5:2 E5 E5 E5:2 E5 E5 E5:2 E5 G5 C5:1.5 D5:0.5 E5:4 F5 F5 F5:1.5 F5:0.5 F5 E5 E5 E5:0.5 E5:0.5 G5 G5 F5 D5 C5:4'
 ].map(t=>t.split(' ').map(x=>{const[n,d]=x.split(':');return[n,+(d||1)]}));
 const NOTE={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 const hz=n=>440*Math.pow(2,(NOTE[n[0]]+12*(+n[1]+1)-69)/12);
-const BEAT=.42;let mus={timer:null,song:0,idx:0,t:0,gain:null};
+const BEAT=.42;let mus={timer:null,song:Math.floor(Math.random()*6),idx:0,t:0,gain:null};
 function musicTick(){
   if(!ac)return;
   while(mus.t<ac.currentTime+.25){
@@ -1210,7 +1220,7 @@ function musicTick(){
 function musicOn(){
   if(S.audio!==2||mus.timer||document.hidden||(typeof videoPlaying!=='undefined'&&videoPlaying))return;
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
-    mus.gain=mus.gain||(()=>{const g=ac.createGain();g.gain.value=.16;g.connect(ac.destination);return g})();
+    mus.gain=mus.gain||(()=>{const g=ac.createGain();g.gain.value=.24;g.connect(out());return g})();
     mus.t=ac.currentTime+.1;mus.timer=setInterval(musicTick,80);musicTick()}catch(e){}
 }
 function musicOff(){if(mus.timer){clearInterval(mus.timer);mus.timer=null}
@@ -1370,8 +1380,10 @@ function showRest(){
 function limitUI(){
   const box=document.getElementById('limitBox');if(!box)return;
   const used=S.use&&S.use.day===new Date().toDateString()?Math.floor(S.use.sec/60):0;
-  box.innerHTML=`<h3 class="lim-h">오늘은 그만 알림 <small>오늘 쓴 시간 ${used}분</small></h3><div class="lim-row">${LIMITS.map(m=>`<button type="button" class="lim" data-m="${m}" aria-pressed="${(S.limit||0)===m}">${m?m+'분':'끔'}</button>`).join('')}</div>
+  box.innerHTML=`<h3 class="lim-h">소리 크기 <small>효과음·노래 (말소리는 기기 볼륨)</small></h3><div class="lim-row">${VOLS.map((v,i)=>`<button type="button" class="vol" data-v="${i}" aria-pressed="${(S.vol??1)===i}">${v[1]}</button>`).join('')}</div>
+    <h3 class="lim-h">오늘은 그만 알림 <small>오늘 쓴 시간 ${used}분</small></h3><div class="lim-row">${LIMITS.map(m=>`<button type="button" class="lim" data-m="${m}" aria-pressed="${(S.limit||0)===m}">${m?m+'분':'끔'}</button>`).join('')}</div>
     <p class="parent-note">정한 시간이 되면 "오늘은 여기까지!" 화면이 떠요. 2분 전에 미리 알려 줘요. 어른이 3초 꾹 누르면 10분 더 할 수 있어요.</p>`;
+  box.querySelectorAll('.vol').forEach(b=>b.addEventListener('click',()=>{S.vol=+b.dataset.v;save();try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();out()}catch(e){}tone(660,.2,0,.2);tone(880,.25,.18,.2);limitUI()}));
   box.querySelectorAll('.lim').forEach(b=>b.addEventListener('click',()=>{S.limit=+b.dataset.m;save();limitUI()}));
 }
 setInterval(useTick,10000);
@@ -2496,8 +2508,8 @@ function update(celebrate){
   {const ids=regIds(p);if(ids.length>24){const n=ids.filter(id=>dotColor(id)!=='#fff').length;$('dots').innerHTML=`<span class="pbar"><i style="width:${Math.round(n/ids.length*100)}%"></i></span><b class="pnum2">${n} / ${ids.length}</b>`}
   else $('dots').innerHTML=ids.map(id=>`<span style="background:${dotColor(id)}"></span>`).join('')}
   const complete=regions.every(r=>f[r.dataset.id]||D.includes(r.dataset.id));
-  const was=svg.classList.contains('alive');
-  svg.classList.toggle('alive',complete);done.hidden=!complete;
+  const was=svg.dataset.cmp==='1';svg.dataset.cmp=complete?'1':'';
+  if(complete){svg.classList.add('alive');clearTimeout(svg._at);svg._at=setTimeout(()=>svg.classList.remove('alive'),12000)}else svg.classList.remove('alive');done.hidden=!complete;
   if(complete){$('doneText').textContent='다 칠했어요!';$('next').textContent='다음 그림 ▶';$('again').hidden=false}
   if(complete){mission=null;regions.forEach(r=>r.classList.remove('target'));$('mission').hidden=true}
   if(complete&&!was&&celebrate){album.push(snapshot(p));if(album.length>60)album.shift();curAlbum=album.length-1;saveAlbum();later(()=>toast('그림첩에 넣었어요!'),1800);confetti();speak('우와! '+p.name+' 다 칠했어요! '+(p.cheer||''));[523,659,784,1047].forEach((n,i)=>tone(n,.18,i*.12,.2));if(VSFX[p.id])setTimeout(VSFX[p.id],700);return true}
@@ -2800,7 +2812,7 @@ buildPalette();buildTray();render();
   addEventListener('appinstalled',()=>{btn.hidden=true});
   if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   /* 새 버전 확인: 앱이 열리거나 다시 화면에 나올 때 */
-  const APP_V="15";
+  const APP_V="16";
   function checkUpdate(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
       if(!j||j.v===APP_V)return;
