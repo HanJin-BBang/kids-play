@@ -124,7 +124,9 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
 .pick{border:4px solid var(--bg);border-radius:24px;padding:10px 6px;display:grid;gap:6px;font-size:clamp(16px,2.6vh,20px);white-space:nowrap;position:relative}
 .pick[aria-current="true"]{border-color:var(--ink)}
-.pick svg{width:100%;aspect-ratio:1;max-width:100%;max-height:18vh;pointer-events:none}
+.pick svg,.pick .timg,.pick .tph{width:100%;aspect-ratio:1;max-width:100%;max-height:18vh;pointer-events:none;display:block;margin:auto;object-fit:contain}
+.pick .tph{background:var(--bg);border-radius:14px}
+.picks .cpick{content-visibility:auto;contain-intrinsic-size:auto 170px}
 .badge{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;border-radius:999px;padding:2px 10px;font-size:15px}
 
 #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
@@ -701,7 +703,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
     <div class="picker-head"><h2>어른 설정</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
     <div class="levels" id="levels"></div>
     <div id="limitBox"></div>
-    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 17</b></p>
+    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 18</b></p>
   </div>
 </div>
 <div class="picker" id="share" hidden>
@@ -1714,7 +1716,7 @@ function startPuzzle(){
   PICS.filter(p=>p.big).forEach(p=>items.push({p}));
   shuffle(PICS.filter(p=>!p.big)).slice(0,items.length<8?10:6).forEach(p=>items.push({p}));
   items.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='pick pzc-pic';
-    b.appendChild(it.art?thumbFrom(it.p,it.art.f||{},it.art.pt||{},it.art.st||[],false):thumb(it.p));
+    b.appendChild(imgOf(it.art?thumbFrom(it.p,it.art.f||{},it.art.pt||{},it.art.st||[],false):thumb(it.p)));
     b.insertAdjacentHTML('beforeend',`<span>${it.mine?'내 그림 · ':''}${it.p.name}</span>`);
     onTap(b,()=>{tone(560);playPuzzle(it.p,it.art)});grid.appendChild(b)});
   setScore(S.pstars||0);speak('어떤 그림으로 퍼즐을 할까?');
@@ -1909,7 +1911,7 @@ const WASH_BG=`<rect width="800" height="450" fill="#DDF1FA"/>${[...Array(9)].ma
 function carChooser(title,pool,go,starKey){
   const g=$('game'),n=S.level===0?6:8;let list=shuffle(pool.slice());
   const draw=()=>{const grid=g.querySelector('.gch-grid');grid.innerHTML='';const show=list.slice(0,n);list=list.slice(n).concat(show);
-    show.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='pick';b.appendChild(thumb(p));b.insertAdjacentHTML('beforeend',`<span>${p.name}</span>`);
+    show.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='pick';b.appendChild(imgOf(thumb(p)));b.insertAdjacentHTML('beforeend',`<span>${p.name}</span>`);
       onTap(b,()=>{tone(560);go(p)});grid.appendChild(b)});
     if(pool.length>n){const m=document.createElement('button');m.type='button';m.className='pick gmore';m.innerHTML='<b>🔄</b><span>다른 차 보기</span>';onTap(m,()=>{tone(620);draw()});grid.appendChild(m)}};
   g.innerHTML=`<div class="gchoose"><h3 class="psec">${title}</h3><div class="gch-grid"></div></div>`;draw();
@@ -2749,8 +2751,8 @@ function onTap(el,fn){let x=0,y=0,down=false;
   el.addEventListener('pointerup',e=>{if(down&&Math.hypot(e.clientX-x,e.clientY-y)<16){down=false;lastTapAt=Date.now();fn()}});
   el.addEventListener('click',()=>{if(Date.now()-lastTapAt>600){lastTapAt=Date.now();fn()}});
 }
-function openPicker(){
-  const box=$('picks');box.innerHTML='<h3 class="psec">놀이</h3>';
+function buildPicker(){
+  const box=$('picks');box.innerHTML='<h3 class="psec">놀이</h3>';pickModeEls=[];
   const MODES=[['quiz','소리 맞히기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF1EC"/><path d="M100 160 L150 160 L214 108 L214 292 L150 240 L100 240 Z" fill="#FF7A59"/><path d="M252 150 Q288 200 252 250 M290 116 Q350 200 290 284" fill="none" stroke="#FF7A59" stroke-width="22" stroke-linecap="round"/></svg>'],
     ['match','짝 맞추기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F1F7FC"/><g transform="rotate(-8 120 200)"><rect x="50" y="90" width="140" height="210" rx="24" fill="#FF7A59"/><text x="120" y="226" font-size="96" text-anchor="middle" fill="#fff" font-family="sans-serif">?</text></g><g transform="rotate(8 280 200)"><rect x="210" y="90" width="140" height="210" rx="24" fill="#fff" stroke="#2B2D42" stroke-width="10"/><circle cx="280" cy="195" r="42" fill="#FFD93D" stroke="#2B2D42" stroke-width="8"/></g></svg>'],
     ['videos','영상 보기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#EDEBFF"/><rect x="60" y="100" width="280" height="190" rx="24" fill="#2B2D42"/><path d="M175 150 L250 195 L175 240 Z" fill="#fff"/><g fill="#FFD93D"><rect x="76" y="114" width="22" height="14" rx="3"/><rect x="76" y="262" width="22" height="14" rx="3"/><rect x="302" y="114" width="22" height="14" rx="3"/><rect x="302" y="262" width="22" height="14" rx="3"/></g></svg>'],
@@ -2765,22 +2767,45 @@ function openPicker(){
     ['spot','다른 곳 찾기','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF4EC"/><rect x="50" y="110" width="140" height="180" rx="16" fill="#fff" stroke="#2B2D42" stroke-width="10"/><rect x="210" y="110" width="140" height="180" rx="16" fill="#fff" stroke="#2B2D42" stroke-width="10"/><circle cx="120" cy="200" r="34" fill="#6EC6F0" stroke="#2B2D42" stroke-width="8"/><circle cx="280" cy="200" r="34" fill="#FF8FC1" stroke="#2B2D42" stroke-width="8"/><circle cx="280" cy="200" r="54" fill="none" stroke="#F2545B" stroke-width="10"/></svg>'],
     ['album','내 그림첩','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#FFF8E1"/><g transform="rotate(-6 150 200)"><rect x="60" y="100" width="170" height="190" rx="14" fill="#fff" stroke="#2B2D42" stroke-width="10"/><rect x="80" y="120" width="130" height="110" fill="#6EC6F0"/><circle cx="175" cy="150" r="16" fill="#FFD93D"/><path d="M80 230 L120 180 L160 230 Z" fill="#5BC27A"/></g><g transform="rotate(8 270 210)"><rect x="190" y="110" width="160" height="180" rx="14" fill="#fff" stroke="#2B2D42" stroke-width="10"/><path d="M230 230 L270 160 L310 230 Z" fill="#FF8FC1"/></g></svg>'],
     ['book','그림책','<svg viewBox="0 0 400 400"><rect x="20" y="20" width="360" height="360" rx="40" fill="#F4FBEF"/><path d="M200 110 Q140 80 60 100 L60 310 Q140 290 200 320 Z" fill="#6EC6F0" stroke="#2B2D42" stroke-width="10" stroke-linejoin="round"/><path d="M200 110 Q260 80 340 100 L340 310 Q260 290 200 320 Z" fill="#FFD93D" stroke="#2B2D42" stroke-width="10" stroke-linejoin="round"/><path d="M95 150 L165 140 M95 190 L165 180 M235 140 L305 150 M235 180 L305 190" stroke="#2B2D42" stroke-width="8" stroke-linecap="round"/></svg>']];
-  MODES.forEach(([m,label,art])=>{const b=document.createElement('button');b.type='button';b.className='pick';b.setAttribute('aria-current',String(S.mode===m));
+  MODES.forEach(([m,label,art])=>{const b=document.createElement('button');b.type='button';b.className='pick';b.dataset.m=m;pickModeEls.push(b);
     b.innerHTML=art+`<span>${label}</span>`;onTap(b,()=>{S.mode=m;S.eraser=false;save();picker.hidden=true;render();speak(label);tone(520)});box.appendChild(b)});
   const d=document.createElement('button');d.type='button';d.className='pick';
-  d.setAttribute('aria-current',String(S.mode==='draw'));
+  d.dataset.m='draw';pickModeEls.push(d);
   d.innerHTML=DRAW_THUMB+'<span>자유 그리기</span>';
   onTap(d,()=>{S.mode='draw';S.eraser=false;save();picker.hidden=true;render();speak('자유 그리기');tone(520)});
   box.appendChild(d);
   box.insertAdjacentHTML('beforeend','<h3 class="psec">색칠하기</h3>');
-  PICS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='pick';
-    b.setAttribute('aria-current',String(S.mode==='color'&&i===S.pic));
-    b.appendChild(thumbFrom(p,S.fills[p.id]||{},S.paints[p.id]||{},S.stickers[p.id]||[],false));
-    b.insertAdjacentHTML('beforeend',`<span>${p.name}</span>`+(isDone(p)?'<span class="badge">완성</span>':''));
+  box.insertAdjacentHTML('beforeend','');
+  PICS.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='pick cpick';
+    b.innerHTML=`<span class="tph"></span><span>${p.name}</span>`;
     onTap(b,()=>{S.mode='color';S.pic=i;S.eraser=false;save();picker.hidden=true;render();if(S.level!==2)speak(p.name);tone(520)});
-    box.appendChild(b)});
-  picker.hidden=false;
+    pickEls[p.id]={b,i};box.appendChild(b)});
+  pickBuilt=true;
 }
+/* 그림 고르기 창은 한 번만 만들고, 바뀐 그림의 작은 그림만 다시 그려요 (그림은 가벼운 이미지로) */
+let pickBuilt=false,pickModeEls=[],pickEls={},pickSig={},pickQ=[],pickBusy=false;
+function picSig(p){return JSON.stringify([S.fills[p.id]||0,S.paints[p.id]||0,S.stickers[p.id]||0])}
+function refreshPickThumbs(){
+  PICS.forEach(p=>{const sg=picSig(p);if(sg!==pickSig[p.id]&&!pickQ.includes(p))pickQ.push(p)});
+  const cur=PICS[S.pic];if(cur&&pickQ.includes(cur)){pickQ=[cur,...pickQ.filter(x=>x!==cur)]}
+  if(!pickBusy){pickBusy=true;(function step(){const t0=performance.now();
+    while(pickQ.length&&performance.now()-t0<12){const p=pickQ.shift(),el=pickEls[p.id];if(!el)continue;
+      const im=imgOf(thumbFrom(p,S.fills[p.id]||{},S.paints[p.id]||{},S.stickers[p.id]||[],false));el.b.firstElementChild.replaceWith(im);
+      el.b.querySelector('.badge')?.remove();if(isDone(p))el.b.insertAdjacentHTML('beforeend','<span class="badge">완성</span>');pickSig[p.id]=picSig(p)}
+    if(pickQ.length)setTimeout(step,0);else pickBusy=false})()}
+}
+function openPicker(){
+  if(!pickBuilt)buildPicker();
+  pickModeEls.forEach(b=>b.setAttribute('aria-current',String(S.mode===b.dataset.m)));
+  Object.values(pickEls).forEach(({b,i})=>b.setAttribute('aria-current',String(S.mode==='color'&&i===S.pic)));
+  picker.hidden=false;refreshPickThumbs();
+  const cur=document.querySelector('#picks .pick[aria-current=true]');if(cur)cur.scrollIntoView({block:'nearest'});
+}
+function svgURL(sv){const c=sv.cloneNode(true);c.classList.remove('alive');c.setAttribute('xmlns',NS);const st=document.createElementNS(NS,'style');st.textContent=picCss();c.insertBefore(st,c.firstChild);
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(c))}
+function imgOf(sv){const im=new Image();im.decoding='async';im.alt='';im.className='timg';im.draggable=false;im.src=svgURL(sv);return im}
+/* 앱이 쉬는 틈에 미리 만들어 두기 → 처음 열 때도 빨라요 */
+setTimeout(()=>(window.requestIdleCallback||setTimeout)(()=>{try{if(!pickBuilt)buildPicker();refreshPickThumbs()}catch(e){}}),2500);
 $('tPick').addEventListener('click',()=>{openPicker();tone(480)});
 $('pClose').addEventListener('click',()=>{picker.hidden=true});
 picker.addEventListener('click',e=>{if(e.target===picker)picker.hidden=true});
@@ -2825,7 +2850,7 @@ buildPalette();buildTray();render();
   addEventListener('appinstalled',()=>{btn.hidden=true});
   if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   /* 새 버전 확인: 앱이 열리거나 다시 화면에 나올 때 */
-  const APP_V="17";
+  const APP_V="18";
   function checkUpdate(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
       if(!j||j.v===APP_V)return;
