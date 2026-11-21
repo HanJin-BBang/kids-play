@@ -313,14 +313,9 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
 .pz-frame{position:absolute;display:grid;background:#fff;border-radius:14px;box-shadow:0 0 0 4px var(--bg);overflow:hidden}
 .pz-frame .pz-ghost,.pz-frame .pz-full{position:absolute;inset:0;width:100%;height:100%}
 .pz-slot{border:2px dashed #C3D3DE;position:relative}
-.pz-piece{position:absolute;touch-action:none;pointer-events:none}
-.pz-piece svg{width:100%;height:100%;display:block;pointer-events:none;overflow:visible}
-.pz-piece .pz-hit{fill:transparent;stroke:none;pointer-events:all;cursor:grab}
-.pz-piece .pz-edge{fill:none;stroke:#fff;stroke-width:4;vector-effect:non-scaling-stroke;pointer-events:none}
-.pz-piece:not(.placed) svg{transform:scale(var(--k,1));transition:transform .2s}
-.pz-piece.drag svg{filter:drop-shadow(0 12px 12px rgba(43,45,66,.35));transform:scale(1.06)}
-.pz-piece.placed svg{filter:none}.pz-piece.placed .pz-edge{stroke:rgba(255,255,255,.5);stroke-width:2}
-.pz-piece.placed{transition:left .15s,top .15s}
+.pz{touch-action:none}
+.pz-piece{position:absolute;left:0;top:0;touch-action:none;pointer-events:none;transform-origin:50% 50%;will-change:transform}
+.pz-piece.placed{transition:transform .15s;will-change:auto}
 .pz-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .pz-lines path{fill:none;stroke:#AFC3D1;stroke-width:2.5;stroke-dasharray:7 6;vector-effect:non-scaling-stroke}
 .pzc{display:grid;gap:14px;width:min(100%,900px);align-self:start}
@@ -706,7 +701,7 @@ button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
     <div class="picker-head"><h2>어른 설정</h2><button class="close" id="sClose" type="button" aria-label="닫기">✕</button></div>
     <div class="levels" id="levels"></div>
     <div id="limitBox"></div>
-    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 16</b></p>
+    <p class="parent-note">단계는 이 기기에 저장돼요. 둘째가 쓸 때는 2~3세로 바꿔 주세요. <b style="font-weight:400;color:var(--ink)">앱 버전 17</b></p>
   </div>
 </div>
 <div class="picker" id="share" hidden>
@@ -1737,32 +1732,42 @@ function pzPath(c,r){
   // 시계 방향으로 돌면 바깥쪽이 왼손 방향이 되도록 n=(u.y,-u.x)
   return `M${x} ${y} `+pzEdge([x,y],[x+w,y],top,T)+' '+pzEdge([x+w,y],[x+w,y+h],rig,T)+' '+pzEdge([x+w,y+h],[x,y+h],bot,T)+' '+pzEdge([x,y+h],[x,y],lef,T)+' Z';
 }
-function playPuzzle(p,art){
+/* 퍼즐 조각을 그림(비트맵)으로 한 번만 그려 두고, 끌 때는 transform으로만 옮겨요 → 태블릿에서도 부드럽게 */
+let PIC_CSS=null;const pzHit=document.createElement('canvas').getContext('2d');
+function picCss(){
+  if(PIC_CSS)return PIC_CSS;let t='';
+  for(const sh of document.styleSheets){let rs;try{rs=sh.cssRules}catch(e){continue}for(const r of rs){if(r.selectorText&&/\.pic\b|\.r\b|\.fx\b|\.line\b|\.white\b|\.scene\b/.test(r.selectorText)&&!/jiggle|alive|:hover|target/.test(r.selectorText))t+=r.cssText+'\n'}}
+  const cs=getComputedStyle(document.documentElement),vars=[...new Set(t.match(/--[\w-]+/g)||[])];
+  return PIC_CSS=`svg{${vars.map(v=>v+':'+cs.getPropertyValue(v)).join(';')}}\n`+t;
+}
+function rasterize(sv,size){return new Promise(res=>{
+  try{const c=sv.cloneNode(true);c.classList.remove('alive');c.setAttribute('xmlns','http://www.w3.org/2000/svg');c.setAttribute('width',size);c.setAttribute('height',size);
+    const st=document.createElementNS(NS,'style');st.textContent=picCss();c.insertBefore(st,c.firstChild);
+    const img=new Image();img.onload=()=>res(img);img.onerror=()=>res(null);img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(c))}catch(e){res(null)}})}
+async function playPuzzle(p,art){
   done.hidden=true;clearTimers();const n=S.pzn||6,[C,R]=PZ_CR[n];
   const mk=()=>art?thumbFrom(p,art.f||{},art.pt||{},art.st||[],false):thumb(p);
   const sg=()=>Math.random()<.5?1:-1;
   const H=[...Array(R+1)].map(()=>[...Array(C)].map(sg)),V=[...Array(R)].map(()=>[...Array(C+1)].map(sg));
   const g=$('game');g.innerHTML='<div class="pz"><div class="pz-frame"></div></div>';
   const box=g.querySelector('.pz'),frame=box.querySelector('.pz-frame');
-  pz={p,C,R,H,V,pieces:[],box,frame,left:C*R,mk,M:.26*Math.min(400/C,400/R)};
+  const my=pz={p,C,R,H,V,pieces:[],box,frame,left:C*R,mk,M:.26*Math.min(400/C,400/R)};
   const ghost=mk();ghost.classList.add('pz-ghost');ghost.style.opacity=[.4,.25,.14][S.level];frame.appendChild(ghost);
   const lines=svgEl('svg',{viewBox:'0 0 400 400',class:'pz-lines',preserveAspectRatio:'none'});
   for(let r=0;r<R;r++)for(let c=0;c<C;c++)lines.insertAdjacentHTML('beforeend',`<path d="${pzPath(c,r)}"/>`);
-  frame.appendChild(lines);
+  frame.appendChild(lines);setScore(S.pstars||0);speak(art?'내가 칠한 '+p.name+' 퍼즐이에요!':p.name+' 퍼즐을 맞춰요!');
+  const G0=pzGeom(),dpr=Math.min(2,devicePixelRatio||1),S0=G0.F/400,img=await rasterize(mk(),Math.round(Math.min(1400,G0.F*dpr)));
+  if(pz!==my||!box.isConnected)return;
   const w=400/C,h=400/R,M=pz.M;
   for(let r=0;r<R;r++)for(let c=0;c<C;c++){
-    const el=document.createElement('div');el.className='pz-piece';const sv=mk(),u=sv.dataset.uid,d=pzPath(c,r);
-    sv.setAttribute('viewBox',`${c*w-M} ${r*h-M} ${w+2*M} ${h+2*M}`);sv.setAttribute('preserveAspectRatio','none');
-    const gg=svgEl('g',{'clip-path':`url(#pzc${u})`});while(sv.firstChild)gg.appendChild(sv.firstChild);
-    sv.insertAdjacentHTML('afterbegin',`<defs><clipPath id="pzc${u}"><path d="${d}"/></clipPath></defs>`);
-    sv.querySelector('defs').after(gg);
-    // 원래 defs(무늬)는 그대로 쓸 수 있게 clip 밖에도 둠
-    gg.querySelectorAll(':scope > defs').forEach(df=>sv.insertBefore(df,gg));
-    sv.insertAdjacentHTML('beforeend',`<path class="pz-edge" d="${d}"/><path class="pz-hit" d="${d}"/>`);
-    el.appendChild(sv);box.appendChild(el);
-    const pc={el,c,r,fx:0,fy:0,placed:false};pz.pieces.push(pc);dragPiece(pc);
+    const d=pzPath(c,r),path=new Path2D(d),cv=document.createElement('canvas');cv.className='pz-piece';
+    cv.width=Math.ceil((w+2*M)*S0*dpr);cv.height=Math.ceil((h+2*M)*S0*dpr);
+    const x=cv.getContext('2d'),k=S0*dpr;x.setTransform(k,0,0,k,-(c*w-M)*k,-(r*h-M)*k);
+    x.save();x.clip(path);if(img)x.drawImage(img,0,0,400,400);else{x.fillStyle='#ddd';x.fill(path)}x.restore();
+    x.lineWidth=3/k*dpr;x.strokeStyle='rgba(255,255,255,.95)';x.stroke(path);
+    box.appendChild(cv);pz.pieces.push({el:cv,c,r,path,fx:0,fy:0,x:0,y:0,s:1,placed:false});
   }
-  layoutPuzzle(true);setScore(S.pstars||0);speak(art?'내가 칠한 '+p.name+' 퍼즐이에요!':p.name+' 퍼즐을 맞춰요!');
+  pzEvents();layoutPuzzle(true);
 }
 function pzGeom(){
   const W=pz.box.clientWidth,H=pz.box.clientHeight,port=H>W;
@@ -1772,33 +1777,41 @@ function pzGeom(){
   const cw=F/pz.C,ch=F/pz.R,m=pz.M/(400/pz.C)*cw,mh=pz.M/(400/pz.R)*ch;
   return{W,H,F,fx,fy,cw,ch,m,mh,pw:cw+2*m,ph:ch+2*mh,tray};
 }
+function pzPut(q){q.el.style.transform=`translate3d(${q.x.toFixed(1)}px,${q.y.toFixed(1)}px,0) scale(${q.s})`}
 function layoutPuzzle(init){
   if(!pz||!pz.box.isConnected)return;const G=pzGeom();
   Object.assign(pz.frame.style,{left:G.fx+'px',top:G.fy+'px',width:G.F+'px',height:G.F+'px'});
   const loose=shuffle(pz.pieces.filter(q=>!q.placed));
   if(init){const n=loose.length;let k=1,cols=1,rows=n;
     for(k=1;k>.45;k-=.05){cols=Math.max(1,Math.floor(G.tray.w/(G.cw*k*1.04)));rows=Math.ceil(n/cols);if(rows*G.ch*k*1.04<=G.tray.h)break}
-    pz.k=Math.max(.45,k);pz.box.style.setProperty('--k',pz.k.toFixed(2));
+    pz.k=Math.max(.45,k);
     const cwk=G.pw*pz.k,chk=G.ph*pz.k,sx=cols>1?(G.tray.w-cwk)/(cols-1):0,sy=rows>1?(G.tray.h-chk)/(rows-1):0;
     loose.forEach((q,i)=>{const cx=G.tray.x+cwk/2+(i%cols)*Math.min(sx,cwk*1.15)+(Math.random()-.5)*6,cy=G.tray.y+chk/2+Math.floor(i/cols)*Math.min(sy,chk*1.1)+(Math.random()-.5)*6;
       q.fx=(cx-G.pw/2)/G.W;q.fy=(cy-G.ph/2)/G.H})}
   pz.pieces.forEach(q=>{Object.assign(q.el.style,{width:G.pw+'px',height:G.ph+'px'});
-    if(q.placed){q.el.style.left=(G.fx+q.c*G.cw-G.m)+'px';q.el.style.top=(G.fy+q.r*G.ch-G.mh)+'px'}
-    else{const ex=G.pw*(1-(pz.k||1))/2+G.m,ey=G.ph*(1-(pz.k||1))/2+G.mh,x=Math.min(Math.max(-ex,q.fx*G.W),G.W-G.pw+ex),y=Math.min(Math.max(-ey,q.fy*G.H),G.H-G.ph+ey);q.el.style.left=x+'px';q.el.style.top=y+'px'}});
+    if(q.placed){q.x=G.fx+q.c*G.cw-G.m;q.y=G.fy+q.r*G.ch-G.mh;q.s=1}
+    else{const ex=G.pw*(1-(pz.k||1))/2+G.m,ey=G.ph*(1-(pz.k||1))/2+G.mh;q.x=Math.min(Math.max(-ex,q.fx*G.W),G.W-G.pw+ex);q.y=Math.min(Math.max(-ey,q.fy*G.H),G.H-G.ph+ey);q.s=pz.k||1}
+    pzPut(q)});
 }
-function dragPiece(q){
-  let ox=0,oy=0,on=false;
-  q.el.addEventListener('pointerdown',e=>{if(q.placed)return;e.preventDefault();e.stopPropagation();try{q.el.setPointerCapture(e.pointerId)}catch(_){}
-    const r=q.el.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;on=true;q.el.style.zIndex=++pzZ;q.el.classList.add('drag');tone(520,.05,0,.1)});
-  q.el.addEventListener('pointermove',e=>{if(!on)return;const b=pz.box.getBoundingClientRect();q.el.style.left=(e.clientX-b.left-ox)+'px';q.el.style.top=(e.clientY-b.top-oy)+'px'});
-  const up=()=>{if(!on)return;on=false;q.el.classList.remove('drag');
-    const G=pzGeom(),x=parseFloat(q.el.style.left),y=parseFloat(q.el.style.top),tx=G.fx+q.c*G.cw-G.m,ty=G.fy+q.r*G.ch-G.mh;
-    const snap=Math.min(G.cw,G.ch)*[.5,.42,.36][S.level];
-    if(Math.hypot(x-tx,y-ty)<snap){q.placed=true;q.el.classList.add('placed');q.el.style.zIndex=1;q.el.style.left=tx+'px';q.el.style.top=ty+'px';
-      tone(660+(pz.C*pz.R-pz.left)*30,.12,0,.18);const r=q.el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,'#FFC93C',10);
+function pzEvents(){
+  const box=pz.box;let q=null,ox=0,oy=0,raf=0,lx=0,ly=0;
+  box.addEventListener('pointerdown',e=>{
+    const b=box.getBoundingClientRect(),G=pzGeom(),w=400/pz.C,h=400/pz.R,M=pz.M;
+    const cand=pz.pieces.filter(p=>!p.placed).sort((a,c)=>(+c.el.style.zIndex||0)-(+a.el.style.zIndex||0));
+    for(const p of cand){const r=p.el.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)continue;
+      const u=(e.clientX-r.left)/r.width*(w+2*M)+(p.c*w-M),v=(e.clientY-r.top)/r.height*(h+2*M)+(p.r*h-M);
+      if(pzHit.isPointInPath(p.path,u,v)||cand.length===1){q=p;break}}
+    if(!q)return;e.preventDefault();try{box.setPointerCapture(e.pointerId)}catch(_){}
+    ox=e.clientX-b.left-q.x;oy=e.clientY-b.top-q.y;q.el.style.zIndex=++pzZ;q.el.classList.add('drag');q.s=1.06;pzPut(q);tone(520,.05,0,.1)});
+  box.addEventListener('pointermove',e=>{if(!q)return;lx=e.clientX;ly=e.clientY;if(raf)return;
+    raf=requestAnimationFrame(()=>{raf=0;if(!q)return;const b=box.getBoundingClientRect();q.x=lx-b.left-ox;q.y=ly-b.top-oy;pzPut(q)})});
+  const up=()=>{if(!q)return;const p=q;q=null;cancelAnimationFrame(raf);raf=0;p.el.classList.remove('drag');
+    const G=pzGeom(),tx=G.fx+p.c*G.cw-G.m,ty=G.fy+p.r*G.ch-G.mh,snap=Math.min(G.cw,G.ch)*[.5,.42,.36][S.level];
+    if(Math.hypot(p.x-tx,p.y-ty)<snap){p.placed=true;p.el.classList.add('placed');p.el.style.zIndex=1;p.x=tx;p.y=ty;p.s=1;pzPut(p);
+      tone(660+(pz.C*pz.R-pz.left)*30,.12,0,.18);const r=p.el.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,'#FFC93C',10);
       if(--pz.left===0)puzzleDone();else if(pz.left===1&&S.level<2)speak('하나 남았어요!')}
-    else{q.fx=x/G.W;q.fy=y/G.H;layoutPuzzle(false)}};
-  q.el.addEventListener('pointerup',up);q.el.addEventListener('pointercancel',up);
+    else{p.fx=p.x/G.W;p.fy=p.y/G.H;layoutPuzzle(false)}};
+  box.addEventListener('pointerup',up);box.addEventListener('pointercancel',up);
 }
 function puzzleDone(){
   const p=pz.p;later(()=>{const full=pz.mk();full.classList.add('alive','pz-full');pz.frame.appendChild(full);pz.frame.querySelector('.pz-lines')?.remove();pz.pieces.forEach(q=>q.el.remove())},450);
@@ -2812,7 +2825,7 @@ buildPalette();buildTray();render();
   addEventListener('appinstalled',()=>{btn.hidden=true});
   if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   /* 새 버전 확인: 앱이 열리거나 다시 화면에 나올 때 */
-  const APP_V="16";
+  const APP_V="17";
   function checkUpdate(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
       if(!j||j.v===APP_V)return;
